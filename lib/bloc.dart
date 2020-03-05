@@ -6,6 +6,8 @@ import 'package:l42n/data.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 
+import 'data.dart';
+
 @immutable
 class Bloc {
   const Bloc._(this.directory, this.locales, this.strings)
@@ -52,8 +54,16 @@ class Bloc {
   final Directory directory;
   final List<Locale> locales;
   final Map<String, L42nString> strings;
+  Set<String> get ids => strings.keys.toSet();
 
-  Stream<String> getTranslation(String id, Locale locale) {}
+  Stream<String> getTranslation(String id, Locale locale) {
+    return strings
+        .putIfAbsent(id, () => L42nString(id, {}))
+        .translations
+        .putIfAbsent(locale, () => Translation())
+        .stream;
+  }
+
   void update(String id, Locale locale, String value) {}
 
   Future<void> saveLocale(Locale locale) async {

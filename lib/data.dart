@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:meta/meta.dart';
+import 'package:rxdart/rxdart.dart';
 
 @immutable
 class L42nString {
@@ -12,8 +14,21 @@ class L42nString {
   final Map<Locale, Translation> translations;
 }
 
+/// A translation of a [L42nString] in one [Locale].
 class Translation {
-  Translation([this.value]);
+  Translation([String value])
+      : _value = value,
+        _controller = BehaviorSubject<String>();
 
-  String value;
+  void dispose() => _controller.close();
+
+  final StreamController<String> _controller;
+  Stream<String> get stream => _controller.stream;
+
+  String _value;
+  String get value => _value;
+  set value(String value) {
+    _value = value;
+    _controller.add(value);
+  }
 }
