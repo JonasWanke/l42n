@@ -8,8 +8,9 @@ import 'package:path/path.dart';
 
 @immutable
 class Bloc {
-  const Bloc._(this.locales, this.strings)
-      : assert(locales != null),
+  const Bloc._(this.directory, this.locales, this.strings)
+      : assert(directory != null),
+        assert(locales != null),
         assert(strings != null);
 
   static Future<Bloc> from(Directory directory) async {
@@ -45,12 +46,27 @@ class Bloc {
       }
     }
 
-    return Bloc._(locales, strings);
+    return Bloc._(directory, locales, strings);
   }
 
+  final Directory directory;
   final List<Locale> locales;
   final Map<String, L42nString> strings;
 
   Stream<String> getTranslation(String id, Locale locale) {}
   void update(String id, Locale locale, String value) {}
+
+  Future<void> saveLocale(Locale locale) async {
+    assert(locale != null);
+    assert(locales.contains(locale));
+
+    final file = File(join(directory.path, 'intl_$locale.arb'));
+    final contents = {
+      '@@locale': locale.toString(),
+      for (final string in strings.values)
+        if (string.translations[locale] != null)
+          string.id: string.translations[locale].value,
+    };
+    await file.writeAsString(json.encode(contents));
+  }
 }
