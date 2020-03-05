@@ -1,0 +1,37 @@
+name: l42n
+
+version: 0.1.0
+
+environment:
+  sdk: ">=2.0.0 <3.0.0"
+  flutter: ">=1.10.2-pre.54"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.1.8
+  get_it: ^4.0.0
+  analyzer: ^0.39.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto/Roboto-Thin.ttf
+          weight: 100
+        - asset: fonts/Roboto/Roboto-Light.ttf
+          weight: 300
+        - asset: fonts/Roboto/Roboto-Regular.ttf
+          weight: 400
+        - asset: fonts/Roboto/Roboto-Medium.ttf
+          weight: 500
+        - asset: fonts/Roboto/Roboto-Bold.ttf
+          weight: 700
+        - asset: fonts/Roboto/Roboto-Black.ttf
+          weight: 900
