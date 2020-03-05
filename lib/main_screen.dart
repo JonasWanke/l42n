@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'bloc.dart';
+import 'editor.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -8,33 +12,48 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  Directory _folder;
-  bool get _isFolderOpened => _folder != null;
+  Directory _directory;
+  bool get _isDirOpened => _directory != null;
 
-  final _noFolderOpenedFormKey = GlobalKey<FormState>();
-  final _noFolderFolderController = TextEditingController();
+  final _noDirOpenedFormKey = GlobalKey<FormState>();
+  final _noDirPathController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    if (!_isFolderOpened) {
+    if (!_isDirOpened) {
       return _buildNoFolderContent(context);
     }
 
-    return Center(
-        child: Text((_folder.listSync().first as File).readAsStringSync()));
+    return FutureBuilder(
+      future: Bloc.from(_directory),
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: snapshot.hasError
+                ? snapshot.error.toString()
+                : CircularProgressIndicator(),
+          );
+        }
+
+        return Provider<Bloc>(
+          create: (_) => snapshot.data,
+          child: Editor(),
+        );
+      },
+    );
   }
 
   Widget _buildNoFolderContent(BuildContext context) {
     return Center(
       child: Form(
-        key: _noFolderOpenedFormKey,
+        key: _noDirOpenedFormKey,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox(
               width: 384,
               child: TextFormField(
-                controller: _noFolderFolderController,
+                controller: _noDirPathController,
                 validator: (value) {
                   final type = FileSystemEntity.typeSync(value);
                   if (type == FileSystemEntityType.notFound) {
@@ -52,13 +71,13 @@ class _MainScreenState extends State<MainScreen> {
             RaisedButton(
               color: Theme.of(context).primaryColor,
               onPressed: () {
-                final isValid = _noFolderOpenedFormKey.currentState.validate();
+                final isValid = _noDirOpenedFormKey.currentState.validate();
                 if (!isValid) {
                   return;
                 }
 
                 setState(() {
-                  _folder = Directory(_noFolderFolderController.text);
+                  _directory = Directory(_noDirPathController.text);
                 });
               },
               child: Text('Open'),

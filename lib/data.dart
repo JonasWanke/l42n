@@ -4,7 +4,7 @@ import 'package:meta/meta.dart';
 
 @immutable
 class L42nString {
-  const L42nString(this.id, [this.translations = const {}])
+  const L42nString(this.id, this.translations)
       : assert(id != null),
         assert(translations != null);
 
