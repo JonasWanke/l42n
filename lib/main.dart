@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'l42n_app.dart';
+import 'main_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: Text('L42n'),
         ),
-        body: Container(),
+        body: MainScreen(),
       ),
     );
   }
