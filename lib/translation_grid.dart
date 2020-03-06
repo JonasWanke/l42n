@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'data/data.dart';
 import 'translation_field.dart';
+import 'translation_row.dart';
 
 class TranslationGrid extends StatelessWidget {
   TranslationGrid({String filter = ''})
@@ -61,10 +62,10 @@ class TranslationGrid extends StatelessWidget {
                       return SizedBox(height: 8);
                     }
                     if (index.isEven) {
-                      return Divider();
+                      return Divider(height: 8);
                     }
 
-                    return _TranslationRow(
+                    return TranslationRow(
                       id: ids[index ~/ 2],
                       proportions: proportions,
                       partsToHighlight: _filterParts,
@@ -117,7 +118,7 @@ class _HeaderRow extends StatelessWidget {
         ];
         return SizedBox(
           height: 56,
-          child: _Row(
+          child: GridRow(
             proportions: proportions,
             cells: [
               for (final title in titles)
@@ -140,103 +141,8 @@ class _HeaderRow extends StatelessWidget {
   }
 }
 
-class _TranslationRow extends StatelessWidget {
-  const _TranslationRow({
-    Key key,
-    @required this.id,
-    @required this.proportions,
-    this.partsToHighlight = const [],
-  })  : assert(id != null),
-        assert(proportions != null),
-        super(key: key);
-
-  final String id;
-  final List<int> proportions;
-  final List<String> partsToHighlight;
-
-  @override
-  Widget build(BuildContext context) {
-    final project = Provider.of<Project>(context);
-
-    return StreamBuilder<List<Locale>>(
-      stream: project.localeBloc.all,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Center(
-            child: snapshot.hasError
-                ? Text(snapshot.error.toString())
-                : CircularProgressIndicator(),
-          );
-        }
-
-        final locales = snapshot.data;
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: _Row(
-            proportions: proportions,
-            leading: StreamBuilder<List<L42nStringError>>(
-              stream: project.errorBloc.allForResource(id),
-              builder: (context, snapshot) {
-                final errors = snapshot.data;
-                if (errors?.isEmpty != false) {
-                  return SizedBox();
-                }
-
-                final sorted = errors.toList()
-                  ..sort((e1, e2) {
-                    return (e1.locale?.toString() ?? '')
-                        .compareTo(e2.locale?.toString() ?? '');
-                  });
-                return Tooltip(
-                  message: sorted
-                      .map((e) =>
-                          '• ${e.locale != null ? '${e.locale}: ' : ''}${e.runtimeType}')
-                      .join('\n'),
-                  child: Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            errors.any((e) => e.severity == ErrorSeverity.error)
-                                ? Theme.of(context).errorColor
-                                : Colors.yellow,
-                      ),
-                      width: 12,
-                      height: 12,
-                    ),
-                  ),
-                );
-              },
-            ),
-            trailing: Center(
-              child: IconButton(
-                icon: Icon(Icons.delete_outline),
-                tooltip: 'Delete resource',
-                onPressed: () {
-                  // project.
-                  Scaffold.of(context).showSnackBar(SnackBar(
-                    content: Text('Resource $id deleted.'),
-                  ));
-                },
-              ),
-            ),
-            cells: [
-              IdWithHighlightedParts(
-                id: id,
-                partsToHighlight:
-                    partsToHighlight.isNotEmpty ? partsToHighlight : null,
-              ),
-              for (final locale in locales) TranslationField(id, locale),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({
+class GridRow extends StatelessWidget {
+  const GridRow({
     Key key,
     this.leading,
     this.trailing = const SizedBox(),
@@ -255,6 +161,7 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      // crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         SizedBox(
           width: 32,
