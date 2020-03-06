@@ -57,8 +57,7 @@ class Bloc {
   Set<String> get ids => strings.keys.toSet();
 
   Stream<String> getTranslation(String id, Locale locale) {
-    return strings
-        .putIfAbsent(id, () => L42nString(id, {}))
+    return strings[id]
         .translations
         .putIfAbsent(locale, () => Translation())
         .stream;

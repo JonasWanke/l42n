@@ -11,7 +11,7 @@ class EditorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return FutureBuilder<Bloc>(
       future: Bloc.from(directory),
       builder: (_, snapshot) {
         if (!snapshot.hasData) {
@@ -23,6 +23,7 @@ class EditorPage extends StatelessWidget {
         }
 
         final bloc = snapshot.data;
+        final ids = bloc.ids.toList()..sort();
 
         return Scaffold(
           appBar: AppBar(
@@ -36,23 +37,25 @@ class EditorPage extends StatelessWidget {
                   DataColumn(label: Text(locale.toString())),
               ],
               rows: [
-                for (final entry in bloc.strings.entries)
+                for (final id in ids)
                   DataRow(
-                    key: ValueKey(entry.key),
+                    key: ValueKey(id),
                     cells: [
-                      DataCell(Text(entry.key)),
+                      DataCell(Text(id)),
                       for (final locale in bloc.locales)
                         DataCell(
                           Tooltip(
-                            message: entry.value.translations[locale].value ??
-                                'Not translated yet.',
+                            message:
+                                bloc.strings[id].translations[locale].value ??
+                                    'Not translated yet.',
                             child: Text(
-                              entry.value.translations[locale].value ?? '',
+                              bloc.strings[id].translations[locale].value ?? '',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          placeholder: entry.value.translations[locale] == null,
+                          placeholder:
+                              bloc.strings[id].translations[locale] == null,
                         ),
                     ],
                   ),
