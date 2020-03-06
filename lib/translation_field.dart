@@ -16,7 +16,7 @@ class TranslationField extends StatelessWidget {
     final project = Provider.of<Project>(context);
 
     return StreamBuilder<String>(
-      stream: project.getTranslation(id, locale),
+      stream: project.translationBloc.get(id, locale),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(
@@ -89,11 +89,9 @@ class _EditableTranslationFieldState extends State<EditableTranslationField> {
         ),
         duration: Duration(days: 1),
       ));
-      await Provider.of<Project>(context, listen: false).setTranslation(
-        widget.id,
-        widget.locale,
-        _controller.text,
-      );
+      await Provider.of<Project>(context, listen: false)
+          .translationBloc
+          .set(widget.id, widget.locale, _controller.text);
       print('Done.');
       snackbar.close();
       Scaffold.of(context).showSnackBar(SnackBar(
