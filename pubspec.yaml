@@ -19,6 +19,7 @@ dependencies:
   provider: ^4.0.4
   rxdart: ^0.23.1
   sembast: ^2.3.0
+  tuple: ^1.0.3
 
 dev_dependencies:
   flutter_test:

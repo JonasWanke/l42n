@@ -170,39 +170,40 @@ class _TranslationRow extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: 4),
           child: _Row(
             proportions: proportions,
-            // leading: StreamBuilder<List<L42nStringError>>(
-            //   stream: string.errors,
-            //   builder: (context, snapshot) {
-            //     final errors = snapshot.data;
-            //     if (errors?.isEmpty != false) {
-            //       return SizedBox();
-            //     }
+            leading: StreamBuilder<List<L42nStringError>>(
+              stream: project.getErrorsForResource(id),
+              builder: (context, snapshot) {
+                final errors = snapshot.data;
+                if (errors?.isEmpty != false) {
+                  return SizedBox();
+                }
 
-            //     final sorted = errors.toList()
-            //       ..sort((e1, e2) {
-            //         return (e1.locale?.toString() ?? '')
-            //             .compareTo(e2.locale?.toString() ?? '');
-            //       });
-            //     return Tooltip(
-            //       message: sorted
-            //           .map((e) =>
-            //               '• ${e.locale != null ? '${e.locale}: ' : ''}${e.message}')
-            //           .join('\n'),
-            //       child: Center(
-            //         child: Container(
-            //           decoration: BoxDecoration(
-            //             shape: BoxShape.circle,
-            //             color: errors.any((e) => e.severity == ErrorSeverity.error)
-            //                 ? Theme.of(context).errorColor
-            //                 : Colors.yellow,
-            //           ),
-            //           width: 12,
-            //           height: 12,
-            //         ),
-            //       ),
-            //     );
-            //   },
-            // ),
+                final sorted = errors.toList()
+                  ..sort((e1, e2) {
+                    return (e1.locale?.toString() ?? '')
+                        .compareTo(e2.locale?.toString() ?? '');
+                  });
+                return Tooltip(
+                  message: sorted
+                      .map((e) =>
+                          '• ${e.locale != null ? '${e.locale}: ' : ''}${e.runtimeType}')
+                      .join('\n'),
+                  child: Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color:
+                            errors.any((e) => e.severity == ErrorSeverity.error)
+                                ? Theme.of(context).errorColor
+                                : Colors.yellow,
+                      ),
+                      width: 12,
+                      height: 12,
+                    ),
+                  ),
+                );
+              },
+            ),
             cells: [
               Text(id),
               for (final locale in locales) TranslationField(id, locale),

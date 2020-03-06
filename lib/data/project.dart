@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:l42n/data/error.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_memory.dart';
+import 'package:tuple/tuple.dart';
 
 import 'project_backend.dart';
 import 'utils.dart';
@@ -36,6 +39,8 @@ class Project {
             _db, _Translation(id, translation.key, translation.value).toJson());
       }
     }
+
+    _startLinting();
   }
 
   static Future<Project> create({
@@ -93,6 +98,7 @@ class Project {
     }
 
     await ref.add(_db, _Resource().toJson());
+    _startErrorJobForResource(id);
   }
 
   Stream<List<String>> get resourceIds => _resourceStore.streamKeys(_db);
@@ -150,6 +156,76 @@ class Project {
           translation.resourceId: translation.value,
     };
   }
+
+  Stream<Map<Locale, String>> getAllTranslationsForResource(String id) {
+    return _translationStore
+        .query(
+          finder: Finder(filter: Filter.equals('resourceId', id)),
+        )
+        .onSnapshots(_db)
+        .map((list) => list
+            .map((json) => _Translation.fromJson(json.value))
+            .where((t) => t.value != null))
+        .map((list) => {
+              for (final translation in list)
+                translation.locale: translation.value,
+            });
+  }
+
+  // Errors
+  final StoreRef<int, Map<String, dynamic>> _errorStore =
+      intMapStoreFactory.store('error');
+  final Map<String, StreamSubscription> _perResourceErrorJobs = {};
+  void _startLinting() async {
+    (await resourceIds.first).forEach(_startErrorJobForResource);
+  }
+
+  void _startErrorJobForResource(String id) {
+    _perResourceErrorJobs[id]?.cancel();
+    _perResourceErrorJobs[id] = Rx.combineLatest2(
+      locales,
+      getAllTranslationsForResource(id),
+      (l, t) => Tuple2<List<Locale>, Map<Locale, String>>(l, t),
+    ).listen((tuple) {
+      final locales = tuple.item1;
+      final translations = tuple.item2;
+
+      final errors = locales
+          .where((l) => translations[l] == null)
+          .map((l) => MissingTranslationError(l))
+          .map((e) => _Error(id, e).toJson())
+          .toList();
+      _db.transaction((t) async {
+        await _errorStore.delete(
+          t,
+          finder: Finder(
+            filter: Filter.equals('resource', id) &
+                Filter.equals('error._type', MissingTranslationError.type),
+          ),
+        );
+        await _errorStore.addAll(t, errors);
+      });
+    });
+  }
+
+  Stream<List<L42nStringError>> getErrorsForResource(String id) {
+    return _errorStore
+        .query(
+          finder: Finder(
+            filter: Filter.equals('resource', id) &
+                Filter.equals('error._type', MissingTranslationError.type),
+          ),
+        )
+        .onSnapshots(_db)
+        .map((list) => list.map((e) => L42nStringError.fromJson(e.value)));
+  }
+}
+
+@immutable
+class IdAlreadyExistsException implements Exception {
+  const IdAlreadyExistsException(this.id) : assert(id != null);
+
+  final String id;
 }
 
 @immutable
@@ -194,4 +270,26 @@ class _Translation {
   final String resourceId;
   final Locale locale;
   final String value;
+}
+
+@immutable
+class _Error {
+  const _Error(
+    this.resourceId,
+    this.error,
+  )   : assert(resourceId != null),
+        assert(error != null);
+
+  _Error.fromJson(Map<String, dynamic> json)
+      : this(
+          json['resourceId'],
+          L42nStringError.fromJson(json['value']),
+        );
+  Map<String, dynamic> toJson() => {
+        'resourceId': resourceId,
+        'error': error.toJson(),
+      };
+
+  final String resourceId;
+  final L42nStringError error;
 }
