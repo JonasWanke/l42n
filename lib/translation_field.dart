@@ -1,43 +1,100 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'data.dart';
+import 'data/data.dart';
 
-class TranslationField extends StatefulWidget {
-  const TranslationField(this.translation);
+class TranslationField extends StatelessWidget {
+  const TranslationField(this.id, this.locale)
+      : assert(id != null),
+        assert(locale != null);
 
-  final Translation translation;
+  final String id;
+  final Locale locale;
 
   @override
-  _TranslationFieldState createState() => _TranslationFieldState();
+  Widget build(BuildContext context) {
+    final project = Provider.of<Project>(context);
+
+    return StreamBuilder<String>(
+      stream: project.getTranslation(id, locale),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: snapshot.hasError
+                ? Text(snapshot.error.toString())
+                : CircularProgressIndicator(),
+          );
+        }
+
+        final translation = snapshot.data;
+        return EditableTranslationField(
+          id: id,
+          locale: locale,
+          initialText: translation,
+        );
+      },
+    );
+  }
 }
 
-class _TranslationFieldState extends State<TranslationField> {
+class EditableTranslationField extends StatefulWidget {
+  const EditableTranslationField({
+    @required this.id,
+    @required this.locale,
+    @required this.initialText,
+  })  : assert(id != null),
+        assert(locale != null),
+        assert(initialText != null);
+
+  final String id;
+  final Locale locale;
+  final String initialText;
+
+  @override
+  _EditableTranslationFieldState createState() =>
+      _EditableTranslationFieldState();
+}
+
+class _EditableTranslationFieldState extends State<EditableTranslationField> {
+  final _focusNode = FocusNode();
   TextEditingController _controller;
-  final focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.translation.value);
-    focusNode.addListener(_onFocusChanged);
+    _focusNode.addListener(_onFocusChanged);
+    _controller = TextEditingController(text: widget.initialText);
   }
 
   @override
   void dispose() {
-    focusNode.removeListener(_onFocusChanged);
+    _focusNode.removeListener(_onFocusChanged);
     super.dispose();
   }
 
-  void _onFocusChanged() {
-    if (!focusNode.hasFocus) {
-      print('User just left the field!');
-
+  void _onFocusChanged() async {
+    if (!_focusNode.hasFocus && _controller.text != widget.initialText) {
       // TODO(marcelgarus): don't save if the text remained the same
-      widget.translation.value = _controller.text;
-      Scaffold.of(context).showSnackBar(SnackBar(
-        content: Text('Saving…'),
-        duration: Duration(milliseconds: 800),
+      final snackbar = Scaffold.of(context).showSnackBar(SnackBar(
+        content: Row(
+          children: [
+            Text('Saving…'),
+            Transform.scale(
+              scale: 0.5,
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(Colors.white),
+              ),
+            ),
+          ],
+        ),
+        duration: Duration(days: 1),
       ));
+      await Provider.of<Project>(context).setTranslation(
+        widget.id,
+        widget.locale,
+        _controller.text,
+      );
+      snackbar.close();
       Scaffold.of(context).showSnackBar(SnackBar(
         content: Text('Saved 😊'),
         duration: Duration(seconds: 1),
@@ -50,12 +107,12 @@ class _TranslationFieldState extends State<TranslationField> {
     return Container(
       width: 200,
       child: EditableText(
-        focusNode: focusNode,
+        focusNode: _focusNode,
         controller: _controller,
         autocorrect: true,
         scrollPadding: EdgeInsets.zero,
         minLines: 1,
-        maxLines: 9223372036854775807, // 2^63-1 (the largest possible integer)
+        maxLines: null,
         style: Theme.of(context).textTheme.bodyText1,
         cursorColor: Theme.of(context).primaryColor,
         backgroundCursorColor: Colors.green,
