@@ -18,7 +18,7 @@ class TranslationGrid extends StatelessWidget {
     final project = Provider.of<Project>(context);
 
     return StreamBuilder<List<Locale>>(
-      stream: project.locales,
+      stream: project.localeBloc.all,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return SliverFillRemaining(
@@ -42,7 +42,7 @@ class TranslationGrid extends StatelessWidget {
             child: _HeaderRow(proportions: proportions),
           ),
           sliver: StreamBuilder<List<String>>(
-            stream: project.resourceIds,
+            stream: project.resourceBloc.all,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return SliverFillRemaining(
@@ -102,7 +102,7 @@ class _HeaderRow extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.subtitle1;
 
     return StreamBuilder<List<Locale>>(
-      stream: project.locales,
+      stream: project.localeBloc.all,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(
