@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
+import 'package:rxdart/rxdart.dart';
 
 /// A translation of a [L42nString] in one [Locale].
 class Translation extends ValueNotifier<String> {
@@ -20,9 +21,10 @@ class Translation extends ValueNotifier<String> {
 /// A string that should be translated into different languages.
 @immutable
 class L42nString {
-  L42nString._(this.id, this._translations)
+  L42nString(this.id, this._translations)
       : assert(id != null),
-        assert(_translations != null);
+        assert(_translations != null),
+        _localesController = BehaviorSubject.seeded(_translations.keys.toSet());
 
   final String id;
   final Map<Locale, Translation> _translations;
@@ -37,6 +39,40 @@ class L42nString {
     _translations[locale] = translation;
     return translation;
   }
+
+  Translation getTranslation(Locale locale) {
+    final translation =
+        _translations.putIfAbsent(locale, () => Translation._(locale));
+    if (_translations.keys.length != _localesController.value.length) {
+      _localesController.add(_translations.keys.toSet());
+    }
+    return translation;
+  }
+
+  void dispose() => _localesController.close();
+
+  final BehaviorSubject<Set<Locale>> _localesController;
+  Stream<Set<Locale>> get locales => _localesController.stream;
+
+  // Stream<List<L42nStringError>> get errors {
+  //   Stream<MapEntry<Locale, String>> localeAndValue(Locale locale) =>
+  //       getTranslation(locale).stream.map((v) => MapEntry(locale, v));
+
+  //   return locales
+  //       .switchMap(
+  //           (locales) => Rx.combineLatestList(locales.map(localeAndValue)))
+  //       .map((localesAndValues) => {
+  //             for (final entry in localesAndValues) entry.key: entry.value,
+  //           })
+  //       .map((values) {
+  //     final locales = values.keys;
+
+  //     return [
+  //       for (final locale in locales)
+  //         if (values[locale].isEmpty) MissingTranslationError(locale),
+  //     ];
+  //   });
+  // }
 
   Translation operator [](Locale locale) =>
       _translations[locale] ??
@@ -89,7 +125,7 @@ class Project {
       throw Exception('String with id $id already exists.');
     }
 
-    final string = L42nString._(id, {});
+    final string = L42nString(id, {});
     _strings[id] = string;
     backend.onStringAdded(string);
     return string;
@@ -183,3 +219,31 @@ class Project {
     );
   }
 }*/
+@immutable
+class L42nStringError {
+  const L42nStringError({
+    @required this.message,
+    @required this.severity,
+    this.locale,
+  })  : assert(message != null),
+        assert(severity != null);
+
+  final String message;
+  final ErrorSeverity severity;
+  final Locale locale;
+}
+
+enum ErrorSeverity {
+  warning,
+  error,
+}
+
+class MissingTranslationError extends L42nStringError {
+  const MissingTranslationError(Locale locale)
+      : assert(locale != null),
+        super(
+          message: 'Missing translation.',
+          severity: ErrorSeverity.error,
+          locale: locale,
+        );
+}
