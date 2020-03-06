@@ -204,6 +204,18 @@ class _TranslationRow extends StatelessWidget {
                 );
               },
             ),
+            trailing: Center(
+              child: IconButton(
+                icon: Icon(Icons.delete_outline),
+                tooltip: 'Delete resource',
+                onPressed: () {
+                  // project.
+                  Scaffold.of(context).showSnackBar(SnackBar(
+                    content: Text('Resource deleted.'),
+                  ));
+                },
+              ),
+            ),
             cells: [
               Text(id),
               for (final locale in locales) TranslationField(id, locale),
@@ -219,6 +231,7 @@ class _Row extends StatelessWidget {
   const _Row({
     Key key,
     this.leading,
+    this.trailing,
     @required this.cells,
     @required this.proportions,
   })  : assert(cells != null),
@@ -227,6 +240,7 @@ class _Row extends StatelessWidget {
         super(key: key);
 
   final Widget leading;
+  final Widget trailing;
   final List<Widget> cells;
   final List<int> proportions;
 
@@ -247,6 +261,7 @@ class _Row extends StatelessWidget {
               child: cells[i],
             ),
           ),
+        trailing,
       ],
     );
   }
