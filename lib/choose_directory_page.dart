@@ -46,7 +46,7 @@ class ChooseDirectoryPage extends StatelessWidget {
                     return;
                   }
 
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => EditorPage(Directory(_pathController.text)),
                   ));
                 },
