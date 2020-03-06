@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'bloc.dart';
+import 'translation_field.dart';
 
 class EditorPage extends StatelessWidget {
   const EditorPage(this.directory) : assert(directory != null);
@@ -11,7 +12,7 @@ class EditorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return FutureBuilder<Bloc>(
       future: Bloc.from(directory),
       builder: (_, snapshot) {
         if (!snapshot.hasData) {
@@ -36,23 +37,14 @@ class EditorPage extends StatelessWidget {
                   DataColumn(label: Text(locale.toString())),
               ],
               rows: [
-                for (final entry in bloc.strings.entries)
+                for (final string in bloc.strings)
                   DataRow(
-                    key: ValueKey(entry.key),
+                    key: ValueKey(string.id),
                     cells: [
-                      DataCell(Text(entry.key)),
+                      DataCell(Text(string.id)),
                       for (final locale in bloc.locales)
                         DataCell(
-                          Tooltip(
-                            message: entry.value.translations[locale].value ??
-                                'Not translated yet.',
-                            child: Text(
-                              entry.value.translations[locale].value ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          placeholder: entry.value.translations[locale] == null,
+                          TranslationField(string.getTranslation(locale)),
                         ),
                     ],
                   ),
