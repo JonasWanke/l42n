@@ -9,8 +9,9 @@ import 'data.dart';
 
 @immutable
 class Bloc {
-  const Bloc._(this.locales, Map<String, L42nString> strings)
-      : assert(locales != null),
+  const Bloc._(this.directory, this.locales, Map<String, L42nString> strings)
+      : assert(directory != null),
+        assert(locales != null),
         assert(strings != null),
         _strings = strings;
 
@@ -64,9 +65,10 @@ class Bloc {
       }
     }
 
-    return Bloc._(locales, strings);
+    return Bloc._(directory, locales, strings);
   }
 
+  final Directory directory;
   final List<Locale> locales;
   final Map<String, L42nString> _strings;
   Set<String> get ids => _strings.keys.toSet();
@@ -84,5 +86,19 @@ class Bloc {
 
   L42nString getString(String id) {
     return _strings[id] ?? (throw Exception('String not found.'));
+  }
+
+  Future<void> saveLocale(Locale locale) async {
+    assert(locale != null);
+    assert(locales.contains(locale));
+
+    final file = File(join(directory.path, 'intl_$locale.arb'));
+    final contents = {
+      '@@locale': locale.toString(),
+      for (final string in strings)
+        if (string.getTranslation(locale).value.isNotEmpty)
+          string.id: string.getTranslation(locale).value,
+    };
+    await file.writeAsString(json.encode(contents));
   }
 }
