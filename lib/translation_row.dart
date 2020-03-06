@@ -6,6 +6,8 @@ import 'id_with_highlighted_parts.dart';
 import 'translation_field.dart';
 import 'translation_grid.dart';
 
+const _animationDuration = Duration(seconds: 1);
+
 class TranslationRow extends StatefulWidget {
   const TranslationRow({
     Key key,
@@ -43,33 +45,41 @@ class _TranslationRowState extends State<TranslationRow> {
         }
 
         final locales = snapshot.data;
-        return Material(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          elevation: _isSelected ? 4 : 0,
-          child: GridRow(
-            proportions: widget.proportions,
-            leading: _buildIssueDot(),
-            trailing: Center(
-              child: IconButton(
-                icon: Icon(Icons.delete_outline),
-                tooltip: 'Delete resource',
-                onPressed: () {
-                  // project.
-                  Scaffold.of(context).showSnackBar(SnackBar(
-                    content: Text('Resource ${widget.id} deleted.'),
-                  ));
-                },
+        return AnimatedPadding(
+          duration: _animationDuration,
+          padding: EdgeInsets.symmetric(vertical: _isSelected ? 16 : 0),
+          child: FocusAttachment(
+            child: Material(
+              animationDuration: _animationDuration,
+              color: Theme.of(context).scaffoldBackgroundColor,
+              elevation: _isSelected ? 4 : 0,
+              child: GridRow(
+                proportions: widget.proportions,
+                leading: _buildIssueDot(),
+                cells: [
+                  IdWithHighlightedParts(
+                    id: widget.id,
+                    partsToHighlight: widget.partsToHighlight.isNotEmpty
+                        ? widget.partsToHighlight
+                        : null,
+                  ),
+                  for (final locale in locales)
+                    TranslationField(widget.id, locale),
+                ],
+                trailing: Center(
+                  child: IconButton(
+                    icon: Icon(Icons.delete_outline),
+                    tooltip: 'Delete resource',
+                    onPressed: () {
+                      // project.
+                      Scaffold.of(context).showSnackBar(SnackBar(
+                        content: Text('Resource ${widget.id} deleted.'),
+                      ));
+                    },
+                  ),
+                ),
               ),
             ),
-            cells: [
-              IdWithHighlightedParts(
-                id: widget.id,
-                partsToHighlight: widget.partsToHighlight.isNotEmpty
-                    ? widget.partsToHighlight
-                    : null,
-              ),
-              for (final locale in locales) TranslationField(widget.id, locale),
-            ],
           ),
         );
       },
