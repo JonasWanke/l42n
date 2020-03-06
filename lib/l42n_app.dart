@@ -9,6 +9,15 @@ class L42nApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+        ),
+        brightness: Brightness.light,
+        primarySwatch: Colors.purple,
+        fontFamily: 'Roboto',
+        scaffoldBackgroundColor: Colors.white,
+      ),
+      darkTheme: ThemeData(
         brightness: Brightness.dark,
         applyElevationOverlayColor: true,
         primarySwatch: Colors.blue,
