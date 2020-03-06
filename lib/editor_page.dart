@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:l42n/new_resource_fab.dart';
 import 'package:l42n/translation_grid.dart';
 import 'package:provider/provider.dart';
 
@@ -62,7 +63,6 @@ class _EditorPageState extends State<EditorPage> {
           child: Actions(
             actions: actions,
             child: Shortcuts(
-              manager: ShortcutManager(shortcuts: shortcuts),
               shortcuts: shortcuts,
               child: Builder(builder: _buildContent),
             ),
@@ -91,11 +91,7 @@ class _EditorPageState extends State<EditorPage> {
           TranslationGrid(filter: _filter),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        child: Icon(Icons.add, color: Theme.of(context).primaryColor),
-      ),
+      floatingActionButton: NewResourceFab(),
     );
   }
 

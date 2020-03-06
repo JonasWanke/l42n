@@ -89,11 +89,12 @@ class _EditableTranslationFieldState extends State<EditableTranslationField> {
         ),
         duration: Duration(days: 1),
       ));
-      await Provider.of<Project>(context).setTranslation(
+      await Provider.of<Project>(context, listen: false).setTranslation(
         widget.id,
         widget.locale,
         _controller.text,
       );
+      print('Done.');
       snackbar.close();
       Scaffold.of(context).showSnackBar(SnackBar(
         content: Text('Saved 😊'),
