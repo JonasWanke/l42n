@@ -1,15 +1,12 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
-import 'package:path/path.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_memory.dart';
 
+import 'project_backend.dart';
 import 'utils.dart';
 
 @immutable
@@ -60,7 +57,7 @@ class Project {
   }
 
   static Future<Project> forDirectory(Directory directory) =>
-      _DirectoryProjectBackend.from(directory);
+      DirectoryProjectBackend.from(directory);
 
   final ProjectBackend backend;
   final Database _db;
@@ -141,101 +138,4 @@ class Project {
       'value': value,
     });
   }
-}
-
-abstract class ProjectBackend {
-  void onLocaleAdded(Locale locale);
-  void onResourceAdded(String id);
-  void onTranslationChanged(String id, Locale locale, String value);
-}
-
-class _DirectoryProjectBackend extends ProjectBackend {
-  _DirectoryProjectBackend._(this.directory) : assert(directory != null);
-
-  final Directory directory;
-
-  static Future<Project> from(Directory directory) async {
-    final entities = await directory.list(followLinks: false).toList();
-    final l42nFiles = entities
-        .whereType<File>()
-        .where((file) => extension(file.path) == '.arb')
-        .where(
-            (file) => basenameWithoutExtension(file.path).startsWith('intl_'));
-
-    final locales = <Locale>{};
-    final resources = <String, Map<Locale, String>>{};
-
-    for (final file in l42nFiles) {
-      final Map<String, dynamic> currentStrings =
-          json.decode(await file.readAsString());
-      final locale = Locale(currentStrings['@@locale']);
-      locales.add(locale);
-
-      currentStrings.forEach((id, translation) {
-        if (id.startsWith('@')) {
-          return;
-        }
-
-        final string = resources[id] ??= {};
-        string[locale] = translation;
-        resources[id] = string;
-      });
-    }
-
-    return Project.create(
-      backend: _DirectoryProjectBackend._(directory),
-      locales: locales,
-      resources: resources,
-    );
-  }
-
-  @override
-  void onLocaleAdded(Locale locale) async {
-    // TODO(JonasWanke): implement onLocaleAdded
-  }
-
-  @override
-  void onResourceAdded(String id) {}
-
-  @override
-  void onTranslationChanged(String id, Locale locale, String value) async {
-    // TODO(JonasWanke): implement onTranslationChanged
-    // final file = File(join(directory.path, 'intl_$locale.arb'));
-    // final contents = {
-    //   '@@locale': locale.toString(),
-    //   for (final string in resources)
-    //     if (string.getTranslation(locale).value.isNotEmpty)
-    //       string.id: string.getTranslation(locale).value,
-    // };
-    // await file.writeAsString(json.encode(contents));
-  }
-}
-
-@immutable
-class L42nStringError {
-  const L42nStringError({
-    @required this.message,
-    @required this.severity,
-    this.locale,
-  })  : assert(message != null),
-        assert(severity != null);
-
-  final String message;
-  final ErrorSeverity severity;
-  final Locale locale;
-}
-
-enum ErrorSeverity {
-  warning,
-  error,
-}
-
-class MissingTranslationError extends L42nStringError {
-  const MissingTranslationError(Locale locale)
-      : assert(locale != null),
-        super(
-          message: 'Missing translation.',
-          severity: ErrorSeverity.error,
-          locale: locale,
-        );
 }

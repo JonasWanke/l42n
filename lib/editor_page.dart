@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:l42n/translation_grid.dart';
 import 'package:provider/provider.dart';
 
-import 'data.dart';
+import 'data/data.dart';
 
 class EditorPage extends StatefulWidget {
   const EditorPage(this.directory) : assert(directory != null);

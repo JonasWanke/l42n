@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'data.dart';
+import 'data/data.dart';
 
 class TranslationField extends StatefulWidget {
   const TranslationField(this.id, this.locale)

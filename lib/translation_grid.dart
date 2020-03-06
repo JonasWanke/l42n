@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:provider/provider.dart';
 
-import 'data.dart';
+import 'data/data.dart';
 import 'translation_field.dart';
 
 class TranslationGrid extends StatelessWidget {
@@ -40,38 +40,39 @@ class TranslationGrid extends StatelessWidget {
             child: _HeaderRow(proportions: proportions),
           ),
           sliver: StreamBuilder<List<String>>(
-              stream: project.resourceIds,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: snapshot.hasError
-                          ? Text(snapshot.error.toString())
-                          : CircularProgressIndicator(),
-                    ),
-                  );
-                }
-
-                final ids = snapshot.data.where(_applyFilter).toList();
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if (index == 0) {
-                        return SizedBox(height: 8);
-                      }
-                      if (index.isEven) {
-                        return Divider();
-                      }
-
-                      return _TranslationRow(
-                        id: ids[index ~/ 2],
-                        proportions: proportions,
-                      );
-                    },
-                    childCount: 2 * ids.length + 1,
+            stream: project.resourceIds,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: snapshot.hasError
+                        ? Text(snapshot.error.toString())
+                        : CircularProgressIndicator(),
                   ),
                 );
-              }),
+              }
+
+              final ids = snapshot.data.where(_applyFilter).toList();
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index == 0) {
+                      return SizedBox(height: 8);
+                    }
+                    if (index.isEven) {
+                      return Divider();
+                    }
+
+                    return _TranslationRow(
+                      id: ids[index ~/ 2],
+                      proportions: proportions,
+                    );
+                  },
+                  childCount: 2 * ids.length + 1,
+                ),
+              );
+            },
+          ),
         );
       },
     );
