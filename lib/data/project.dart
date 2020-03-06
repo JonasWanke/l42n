@@ -63,7 +63,8 @@ class Project {
   final Database _db;
 
   // Locale
-  final StoreRef _localeStore = stringMapStoreFactory.store('locale');
+  final StoreRef<String, Map<String, dynamic>> _localeStore =
+      stringMapStoreFactory.store('locale');
   RecordRef<String, Map<String, dynamic>> _localeRef(Locale locale) =>
       _localeStore.record(locale.toLanguageTag());
 
@@ -80,11 +81,12 @@ class Project {
     }
 
     await ref.put(_db, {});
-    backend.onLocaleAdded(locale);
+    await backend.onLocaleAdded(this, locale);
   }
 
   // Resource
-  final StoreRef _resourceStore = stringMapStoreFactory.store('resource');
+  final StoreRef<String, Map<String, dynamic>> _resourceStore =
+      stringMapStoreFactory.store('resource');
   RecordRef<String, Map<String, dynamic>> _resourceRef(String id) =>
       _resourceStore.record(id);
   // L42nString addString(String id) {
@@ -101,7 +103,8 @@ class Project {
   Stream<List<String>> get resourceIds => _resourceStore.streamKeys(_db);
 
   // Translation
-  final StoreRef _translationStore = intMapStoreFactory.store('translation');
+  final StoreRef<int, Map<String, dynamic>> _translationStore =
+      intMapStoreFactory.store('translation');
   Future<RecordRef<int, Map<String, dynamic>>> _translationRef(
       String resourceId, Locale locale) async {
     final snapshot = await _translationStore.findFirst(
@@ -117,7 +120,7 @@ class Project {
       return ref;
     }
 
-    final id = _translationStore.add(_db, {
+    final id = await _translationStore.add(_db, {
       'id': resourceId,
       'locale': locale.toLanguageTag(),
       'value': null,
@@ -130,12 +133,28 @@ class Project {
         ref.onSnapshot(_db).map((snapshot) => snapshot.value['value']));
   }
 
-  void setTranslation(String resourceId, Locale locale, String value) async {
-    final ref = await _translationRef(resourceId, locale);
+  void setTranslation(String id, Locale locale, String value) async {
+    final ref = await _translationRef(id, locale);
     await ref.update(_db, {
-      'id': resourceId,
+      'id': id,
       'locale': locale.toLanguageTag(),
       'value': value,
     });
+    await backend.onTranslationChanged(this, id, locale, value);
+  }
+
+  Future<Map<String, String>> getAllTranslationsForLocale(Locale locale) async {
+    final values = await _translationStore
+        .query(
+          finder: Finder(
+            filter: Filter.equals('locale', locale.toLanguageTag()),
+          ),
+        )
+        .getSnapshots(_db);
+    return {
+      for (final snapshot in values)
+        if (snapshot.value['value'] != null)
+          snapshot.value['id']: snapshot.value['value'],
+    };
   }
 }

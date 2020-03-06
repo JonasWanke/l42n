@@ -7,17 +7,18 @@ import 'package:path/path.dart';
 import 'project.dart';
 
 abstract class ProjectBackend {
-  void onLocaleAdded(Locale locale);
-  void onResourceAdded(String id);
-  void onTranslationChanged(String id, Locale locale, String value);
+  Future<void> onLocaleAdded(Project project, Locale locale);
+  Future<void> onResourceAdded(Project project, String id);
+  Future<void> onTranslationChanged(
+      Project project, String id, Locale locale, String value);
 }
 
 class DirectoryProjectBackend extends ProjectBackend {
   DirectoryProjectBackend._(this.directory) : assert(directory != null);
 
-  final Directory directory;
-
   static Future<Project> from(Directory directory) async {
+    final project = DirectoryProjectBackend._(directory);
+
     final entities = await directory.list(followLinks: false).toList();
     final l42nFiles = entities
         .whereType<File>()
@@ -46,30 +47,37 @@ class DirectoryProjectBackend extends ProjectBackend {
     }
 
     return Project.create(
-      backend: DirectoryProjectBackend._(directory),
+      backend: project,
       locales: locales,
       resources: resources,
     );
   }
 
-  @override
-  void onLocaleAdded(Locale locale) async {
-    // TODO(JonasWanke): implement onLocaleAdded
-  }
+  static const encoder = JsonEncoder.withIndent('  ');
+  final Directory directory;
 
   @override
-  void onResourceAdded(String id) {}
+  Future<void> onLocaleAdded(Project project, Locale locale) =>
+      _saveLocale(project, locale);
 
   @override
-  void onTranslationChanged(String id, Locale locale, String value) async {
-    // TODO(JonasWanke): implement onTranslationChanged
-    // final file = File(join(directory.path, 'intl_$locale.arb'));
-    // final contents = {
-    //   '@@locale': locale.toString(),
-    //   for (final string in resources)
-    //     if (string.getTranslation(locale).value.isNotEmpty)
-    //       string.id: string.getTranslation(locale).value,
-    // };
-    // await file.writeAsString(json.encode(contents));
+  Future<void> onResourceAdded(Project project, String id) async {}
+
+  @override
+  Future<void> onTranslationChanged(
+          Project project, String id, Locale locale, String value) =>
+      _saveLocale(project, locale);
+
+  Future<void> _saveLocale(Project project, Locale locale) async {
+    final file = _fileForLocale(locale);
+    final translations = await project.getAllTranslationsForLocale(locale);
+    final contents = {
+      '@@locale': locale.toString(),
+      for (final entry in translations.entries) entry.key: entry.value,
+    };
+    await file.writeAsString(encoder.convert(contents));
   }
+
+  File _fileForLocale(Locale locale) =>
+      File(join(directory.path, 'intl_$locale.arb'));
 }
