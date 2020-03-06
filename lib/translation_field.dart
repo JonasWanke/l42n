@@ -19,32 +19,48 @@ class _TranslationFieldState extends State<TranslationField> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.translation.value);
+    focusNode.addListener(_onFocusChanged);
   }
 
-  void _onDone() {
-    print('Changing translation to ${_controller.text}');
-    widget.translation.value = _controller.text;
+  @override
+  void dispose() {
+    focusNode.removeListener(_onFocusChanged);
+    super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!focusNode.hasFocus) {
+      print('User just left the field!');
+
+      // TODO(marcelgarus): don't save if the text remained the same
+      widget.translation.value = _controller.text;
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text('Saving…'),
+        duration: Duration(milliseconds: 800),
+      ));
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text('Saved 😊'),
+        duration: Duration(seconds: 1),
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 200,
-      child: Tooltip(
-        message: widget.translation.value ?? 'Not translated yet.',
-        child: EditableText(
-          focusNode: focusNode,
-          controller: _controller,
-          autocorrect: true,
-          scrollPadding: EdgeInsets.zero,
-          minLines: 1,
-          maxLines: 8,
-          onChanged: (_) => _onDone,
-          onEditingComplete: _onDone,
-          style: Theme.of(context).textTheme.bodyText1,
-          cursorColor: Colors.red,
-          backgroundCursorColor: Colors.green,
-        ),
+      child: EditableText(
+        focusNode: focusNode,
+        controller: _controller,
+        autocorrect: true,
+        scrollPadding: EdgeInsets.zero,
+        minLines: 1,
+        maxLines: 9223372036854775807, // 2^63-1 (the largest possible integer)
+        style: Theme.of(context).textTheme.bodyText1,
+        cursorColor: Theme.of(context).primaryColor,
+        backgroundCursorColor: Colors.green,
+        cursorOpacityAnimates: true,
+        cursorRadius: Radius.circular(1),
       ),
     );
   }
