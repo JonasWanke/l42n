@@ -70,10 +70,7 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Widget _buildTable(BuildContext context, Bloc bloc) {
-    final ids = bloc.ids
-        .where((id) => id.toLowerCase().contains(_filter.toLowerCase()))
-        .toList()
-          ..sort();
+    final ids = bloc.ids.where(_applyFilter).toList()..sort();
 
     return SliverToBoxAdapter(
       child: DataTable(
@@ -106,5 +103,11 @@ class _EditorPageState extends State<EditorPage> {
         ],
       ),
     );
+  }
+
+  bool _applyFilter(String id) {
+    final parts = _filter.trim().toLowerCase().split(RegExp(' +'));
+    final lowerId = id.toLowerCase();
+    return parts.every(lowerId.contains);
   }
 }
