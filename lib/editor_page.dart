@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:l42n/translation_grid.dart';
 
 import 'bloc.dart';
 
@@ -37,7 +38,10 @@ class _EditorPageState extends State<EditorPage> {
                 title: Text('L42n'),
               ),
               _buildTopBar(),
-              _buildTable(context, bloc),
+              TranslationGrid(
+                bloc: bloc,
+                filter: _filter,
+              ),
             ],
           ),
         );
@@ -67,47 +71,5 @@ class _EditorPageState extends State<EditorPage> {
         ],
       ),
     );
-  }
-
-  Widget _buildTable(BuildContext context, Bloc bloc) {
-    final ids = bloc.ids.where(_applyFilter).toList()..sort();
-
-    return SliverToBoxAdapter(
-      child: DataTable(
-        columns: [
-          DataColumn(label: Text('ID')),
-          for (final locale in bloc.locales)
-            DataColumn(label: Text(locale.toString())),
-        ],
-        rows: [
-          for (final id in ids)
-            DataRow(
-              key: ValueKey(id),
-              cells: [
-                DataCell(Text(id)),
-                for (final locale in bloc.locales)
-                  DataCell(
-                    Tooltip(
-                      message: bloc.strings[id].translations[locale].value ??
-                          'Not translated yet.',
-                      child: Text(
-                        bloc.strings[id].translations[locale].value ?? '',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    placeholder: bloc.strings[id].translations[locale] == null,
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  bool _applyFilter(String id) {
-    final parts = _filter.trim().toLowerCase().split(RegExp(' +'));
-    final lowerId = id.toLowerCase();
-    return parts.every(lowerId.contains);
   }
 }
