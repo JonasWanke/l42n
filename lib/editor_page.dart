@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:l42n/translation_grid.dart';
+import 'package:provider/provider.dart';
 
-import 'bloc.dart';
+import 'data.dart';
 
 class EditorPage extends StatefulWidget {
   const EditorPage(this.directory) : assert(directory != null);
@@ -19,30 +20,34 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Bloc>(
-      future: Bloc.from(widget.directory),
+    return FutureBuilder<Project>(
+      future: Project.forDirectory(widget.directory),
       builder: (_, snapshot) {
         if (!snapshot.hasData) {
           return Center(
             child: snapshot.hasError
-                ? snapshot.error.toString()
+                ? Text(snapshot.error.toString())
                 : CircularProgressIndicator(),
           );
         }
 
-        final bloc = snapshot.data;
-        return Scaffold(
-          body: CustomScrollView(
-            slivers: <Widget>[
-              SliverAppBar(
-                title: Text('L42n'),
-              ),
-              _buildTopBar(),
-              TranslationGrid(
-                bloc: bloc,
-                filter: _filter,
-              ),
-            ],
+        final project = snapshot.data;
+        return Provider<Project>(
+          create: (_) => project,
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: CustomScrollView(
+                  slivers: <Widget>[
+                    SliverAppBar(
+                      title: Text('L42n'),
+                    ),
+                    _buildTopBar(),
+                    TranslationGrid(filter: _filter),
+                  ],
+                ),
+              );
+            },
           ),
         );
       },

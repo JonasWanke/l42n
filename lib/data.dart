@@ -7,172 +7,154 @@ import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:sembast/sembast.dart';
+import 'package:sembast/sembast_memory.dart';
 
-/// A translation of a [L42nString] in one [Locale].
-class Translation extends ValueNotifier<String> {
-  Translation._(this.locale, [String value = ''])
-      : assert(locale != null),
-        assert(value != null),
-        super(value);
-
-  final Locale locale;
-}
-
-/// A string that should be translated into different languages.
-@immutable
-class L42nString {
-  L42nString(this.id, this._translations)
-      : assert(id != null),
-        assert(_translations != null),
-        _localesController = BehaviorSubject.seeded(_translations.keys.toSet());
-
-  final String id;
-  final Map<Locale, Translation> _translations;
-
-  Iterable<Translation> get translations => _translations.values;
-  Translation addTranslation(Locale locale) {
-    if (_translations.containsKey(locale)) {
-      throw Exception(
-          'Translation for locale $locale already exists for string $id.');
-    }
-    final translation = Translation._(locale);
-    _translations[locale] = translation;
-    return translation;
-  }
-
-  Translation getTranslation(Locale locale) {
-    final translation =
-        _translations.putIfAbsent(locale, () => Translation._(locale));
-    if (_translations.keys.length != _localesController.value.length) {
-      _localesController.add(_translations.keys.toSet());
-    }
-    return translation;
-  }
-
-  void dispose() => _localesController.close();
-
-  final BehaviorSubject<Set<Locale>> _localesController;
-  Stream<Set<Locale>> get locales => _localesController.stream;
-
-  // Stream<List<L42nStringError>> get errors {
-  //   Stream<MapEntry<Locale, String>> localeAndValue(Locale locale) =>
-  //       getTranslation(locale).stream.map((v) => MapEntry(locale, v));
-
-  //   return locales
-  //       .switchMap(
-  //           (locales) => Rx.combineLatestList(locales.map(localeAndValue)))
-  //       .map((localesAndValues) => {
-  //             for (final entry in localesAndValues) entry.key: entry.value,
-  //           })
-  //       .map((values) {
-  //     final locales = values.keys;
-
-  //     return [
-  //       for (final locale in locales)
-  //         if (values[locale].isEmpty) MissingTranslationError(locale),
-  //     ];
-  //   });
-  // }
-
-  Translation operator [](Locale locale) =>
-      _translations[locale] ??
-      (throw Exception(
-          'No translation for locale $locale exists for string $id.'));
-}
-
-abstract class ProjectBackend {
-  void onStringAdded(L42nString string);
-  void onLocaleAdded(Locale locale);
-  void onTranslationChanged(Translation translation, L42nString string);
-}
+import 'utils.dart';
 
 @immutable
 class Project {
-  const Project({
-    @required this.backend,
-    @required List<Locale> locales,
-    @required Map<String, L42nString> strings,
-  })  : assert(locales != null),
-        assert(strings != null),
-        _locales = locales,
-        _strings = strings;
-
-  final ProjectBackend backend;
-
-  final List<Locale> _locales;
-  Iterable<Locale> get locales => _locales;
-
-  final Map<String, L42nString> _strings;
-  Iterable<String> get ids => _strings.keys;
-  Iterable<L42nString> get strings => _strings.values;
-
-  void addLocale(Locale locale) {
-    if (_locales.contains(locale)) {
-      return;
-    }
-    _locales.add(locale);
-    for (final string in strings) {
-      final translation = string.addTranslation(locale);
-      translation.addListener(() {
-        backend.onTranslationChanged(translation, string);
-      });
-    }
-    backend.onLocaleAdded(locale);
-  }
-
-  L42nString addString(String id) {
-    if (_strings.containsKey(id)) {
-      throw Exception('String with id $id already exists.');
+  Project._(
+    this.backend,
+    this._db,
+    Set<Locale> locales,
+    Map<String, Map<Locale, String>> resources,
+  )   : assert(backend != null),
+        assert(_db != null),
+        assert(locales != null),
+        assert(resources != null) {
+    // Store locales
+    for (final locale in locales) {
+      _localeRef(locale).put(_db, <String, dynamic>{});
     }
 
-    final string = L42nString(id, {});
-    _strings[id] = string;
-    backend.onStringAdded(string);
-    return string;
-  }
+    // Store resources
+    for (final entry in resources.entries) {
+      final id = entry.key;
+      final translations = entry.value;
+      _resourceRef(id).put(_db, {});
 
-  L42nString operator [](String id) =>
-      _strings[id] ?? (throw Exception('String with id $id not found.'));
-
-  void onTranslationChanged(Translation translation, L42nString string) {
-    backend.onTranslationChanged(translation, string);
-  }
-}
-
-/*class DirectoryProject extends Project {
-  DirectoryProject._(
-    this.directory,
-    List<Locale> locales,
-    Map<String, L42nString> initialStrings,
-  )   : assert(directory != null),
-        super(_locales: locales, strings: initialStrings) {
-    for (final string in strings) {
-      for (final locale in locales) {
-        string.getTranslation(locale).stream.forEach((value) {});
+      for (final translation in translations.entries) {
+        _translationStore.add(_db, {
+          'id': id,
+          'locale': translation.key.toLanguageTag(),
+          'value': translation.value,
+        });
       }
     }
   }
 
+  static Future<Project> create({
+    @required ProjectBackend backend,
+    @required Set<Locale> locales,
+    @required Map<String, Map<Locale, String>> resources,
+  }) async {
+    assert(backend != null);
+    assert(locales != null);
+    assert(resources != null);
+
+    // Setting the [path] to `null` always creates a new DB
+    final db = await databaseFactoryMemory.openDatabase(null);
+
+    return Project._(backend, db, locales, resources);
+  }
+
+  static Future<Project> forDirectory(Directory directory) =>
+      _DirectoryProjectBackend.from(directory);
+
+  final ProjectBackend backend;
+  final Database _db;
+
+  // Locale
+  final StoreRef _localeStore = stringMapStoreFactory.store('locale');
+  RecordRef<String, Map<String, dynamic>> _localeRef(Locale locale) =>
+      _localeStore.record(locale.toLanguageTag());
+
+  Stream<List<Locale>> get locales {
+    return _localeStore
+        .streamKeys(_db)
+        .map((keys) => keys.map((k) => (k as String).parseLocale()).toList());
+  }
+
+  void addLocale(Locale locale) async {
+    final ref = _localeRef(locale);
+    if (await ref.exists(_db)) {
+      return;
+    }
+
+    await ref.put(_db, {});
+    backend.onLocaleAdded(locale);
+  }
+
+  // Resource
+  final StoreRef _resourceStore = stringMapStoreFactory.store('resource');
+  RecordRef<String, Map<String, dynamic>> _resourceRef(String id) =>
+      _resourceStore.record(id);
+  // L42nString addString(String id) {
+  //   if (_strings.containsKey(id)) {
+  //     throw Exception('String with id $id already exists.');
+  //   }
+
+  //   final string = L42nString(id, {});
+  //   _strings[id] = string;
+  //   backend.onStringAdded(string);
+  //   return string;
+  // }
+
+  Stream<List<String>> get resourceIds => _resourceStore.streamKeys(_db);
+
+  // Translation
+  final StoreRef _translationStore = intMapStoreFactory.store('translation');
+  Future<RecordRef<int, Map<String, dynamic>>> _translationRef(
+      String resourceId, Locale locale) async {
+    final snapshot = await _translationStore.findFirst(
+      _db,
+      finder: Finder(
+        filter: Filter.equals('id', resourceId) &
+            Filter.equals('locale', locale.toLanguageTag()),
+        limit: 1,
+      ),
+    );
+    final ref = snapshot?.ref;
+    if (ref != null) {
+      return ref;
+    }
+
+    final id = _translationStore.add(_db, {
+      'id': resourceId,
+      'locale': locale.toLanguageTag(),
+      'value': null,
+    });
+    return _translationStore.record(id);
+  }
+
+  Stream<String> getTranslation(String resourceId, Locale locale) {
+    return _translationRef(resourceId, locale).asStream().switchMap((ref) =>
+        ref.onSnapshot(_db).map((snapshot) => snapshot.value['value']));
+  }
+
+  void setTranslation(String resourceId, Locale locale, String value) async {
+    final ref = await _translationRef(resourceId, locale);
+    await ref.update(_db, {
+      'id': resourceId,
+      'locale': locale.toLanguageTag(),
+      'value': value,
+    });
+  }
+}
+
+abstract class ProjectBackend {
+  void onLocaleAdded(Locale locale);
+  void onResourceAdded(String id);
+  void onTranslationChanged(String id, Locale locale, String value);
+}
+
+class _DirectoryProjectBackend extends ProjectBackend {
+  _DirectoryProjectBackend._(this.directory) : assert(directory != null);
+
   final Directory directory;
 
-  static Future<Project> fromDirectory(Directory directory) async {
-    // final de = Locale('de-DE');
-    // final en = Locale('en-US');
-
-    // return Project._(Directory('nonexistent'), [
-    //   de,
-    //   en
-    // ], {
-    //   'a': L42nString('a', {
-    //     en: Translation('An a string.'),
-    //     de: Translation('Ein A-String.'),
-    //   }),
-    //   'b': L42nString('b', {
-    //     en: Translation('A b string.'),
-    //     de: Translation('Ein b-String.'),
-    //   }),
-    // });
-
+  static Future<Project> from(Directory directory) async {
     final entities = await directory.list(followLinks: false).toList();
     final l42nFiles = entities
         .whereType<File>()
@@ -180,8 +162,8 @@ class Project {
         .where(
             (file) => basenameWithoutExtension(file.path).startsWith('intl_'));
 
-    final locales = <Locale>[];
-    final strings = <String, L42nString>{};
+    final locales = <Locale>{};
+    final resources = <String, Map<Locale, String>>{};
 
     for (final file in l42nFiles) {
       final Map<String, dynamic> currentStrings =
@@ -189,36 +171,46 @@ class Project {
       final locale = Locale(currentStrings['@@locale']);
       locales.add(locale);
 
-      currentStrings.forEach((id, stringValue) {
+      currentStrings.forEach((id, translation) {
         if (id.startsWith('@')) {
           return;
         }
 
-        final string = strings[id] ??= L42nString(id, {});
-        string.getTranslation(locale).value = stringValue;
-        strings[id] = string;
+        final string = resources[id] ??= {};
+        string[locale] = translation;
+        resources[id] = string;
       });
     }
 
-    return Project(
-      _locales: locales,
-      strings: strings,
-      saveLocale: (locale) async {
-        assert(locale != null);
-        assert(locales.contains(locale));
-
-        final file = File(join(directory.path, 'intl_$locale.arb'));
-        final contents = {
-          '@@locale': locale.toString(),
-          for (final string in strings)
-            if (string.getTranslation(locale).value.isNotEmpty)
-              string.id: string.getTranslation(locale).value,
-        };
-        await file.writeAsString(json.encode(contents));
-      },
+    return Project.create(
+      backend: _DirectoryProjectBackend._(directory),
+      locales: locales,
+      resources: resources,
     );
   }
-}*/
+
+  @override
+  void onLocaleAdded(Locale locale) async {
+    // TODO(JonasWanke): implement onLocaleAdded
+  }
+
+  @override
+  void onResourceAdded(String id) {}
+
+  @override
+  void onTranslationChanged(String id, Locale locale, String value) async {
+    // TODO(JonasWanke): implement onTranslationChanged
+    // final file = File(join(directory.path, 'intl_$locale.arb'));
+    // final contents = {
+    //   '@@locale': locale.toString(),
+    //   for (final string in resources)
+    //     if (string.getTranslation(locale).value.isNotEmpty)
+    //       string.id: string.getTranslation(locale).value,
+    // };
+    // await file.writeAsString(json.encode(contents));
+  }
+}
+
 @immutable
 class L42nStringError {
   const L42nStringError({
