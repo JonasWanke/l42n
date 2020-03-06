@@ -22,21 +22,18 @@ class Project {
         assert(resources != null) {
     // Store locales
     for (final locale in locales) {
-      _localeRef(locale).put(_db, <String, dynamic>{});
+      _localeRef(locale).put(_db, _Locale().toJson());
     }
 
     // Store resources
     for (final entry in resources.entries) {
       final id = entry.key;
       final translations = entry.value;
-      _resourceRef(id).put(_db, {});
+      _resourceRef(id).put(_db, _Resource().toJson());
 
       for (final translation in translations.entries) {
-        _translationStore.add(_db, {
-          'id': id,
-          'locale': translation.key.toLanguageTag(),
-          'value': translation.value,
-        });
+        _translationStore.add(
+            _db, _Translation(id, translation.key, translation.value).toJson());
       }
     }
   }
@@ -110,7 +107,7 @@ class Project {
     final snapshot = await _translationStore.findFirst(
       _db,
       finder: Finder(
-        filter: Filter.equals('id', resourceId) &
+        filter: Filter.equals('resourceId', resourceId) &
             Filter.equals('locale', locale.toLanguageTag()),
         limit: 1,
       ),
@@ -120,11 +117,8 @@ class Project {
       return ref;
     }
 
-    final id = await _translationStore.add(_db, {
-      'id': resourceId,
-      'locale': locale.toLanguageTag(),
-      'value': null,
-    });
+    final id = await _translationStore.add(
+        _db, _Translation(resourceId, locale).toJson());
     return _translationStore.record(id);
   }
 
@@ -133,14 +127,14 @@ class Project {
         ref.onSnapshot(_db).map((snapshot) => snapshot.value['value']));
   }
 
-  Future<void> setTranslation(String id, Locale locale, String value) async {
-    final ref = await _translationRef(id, locale);
-    await ref.update(_db, {
-      'id': id,
-      'locale': locale.toLanguageTag(),
-      'value': value,
-    });
-    await backend.onTranslationChanged(this, id, locale, value);
+  Future<void> setTranslation(
+    String resourceId,
+    Locale locale,
+    String value,
+  ) async {
+    final ref = await _translationRef(resourceId, locale);
+    await ref.update(_db, _Translation(resourceId, locale, value).toJson());
+    await backend.onTranslationChanged(this, resourceId, locale, value);
   }
 
   Future<Map<String, String>> getAllTranslationsForLocale(Locale locale) async {
@@ -152,9 +146,54 @@ class Project {
         )
         .getSnapshots(_db);
     return {
-      for (final snapshot in values)
-        if (snapshot.value['value'] != null)
-          snapshot.value['id']: snapshot.value['value'],
+      for (final translation
+          in values.map((json) => _Translation.fromJson(json.value)))
+        if (translation.value != null)
+          translation.resourceId: translation.value,
     };
   }
+}
+
+@immutable
+class _Locale {
+  const _Locale();
+
+  // ignore: avoid_unused_constructor_parameters
+  const _Locale.fromJson(Map<String, dynamic> json) : this();
+  Map<String, dynamic> toJson() => {};
+}
+
+@immutable
+class _Resource {
+  const _Resource();
+
+  // ignore: avoid_unused_constructor_parameters
+  const _Resource.fromJson(Map<String, dynamic> json) : this();
+  Map<String, dynamic> toJson() => {};
+}
+
+@immutable
+class _Translation {
+  const _Translation(
+    this.resourceId,
+    this.locale, [
+    this.value,
+  ])  : assert(resourceId != null),
+        assert(locale != null);
+
+  _Translation.fromJson(Map<String, dynamic> json)
+      : this(
+          json['resourceId'],
+          (json['locale'] as String).parseLocale(),
+          json['value'],
+        );
+  Map<String, dynamic> toJson() => {
+        'resourceId': resourceId,
+        'locale': locale.toString(),
+        'value': value,
+      };
+
+  final String resourceId;
+  final Locale locale;
+  final String value;
 }
