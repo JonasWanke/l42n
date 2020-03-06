@@ -83,9 +83,16 @@ class _HeaderRow extends StatelessWidget {
         proportions: proportions,
         cells: [
           for (final title in titles)
-            Text(
-              title,
-              style: textStyle,
+            RichText(
+              text: TextSpan(children: [
+                TextSpan(text: title, style: textStyle),
+                TextSpan(text: ' '),
+                TextSpan(
+                  text: '(intl_$title.arb) – ${89} % complete',
+                  style:
+                      textStyle.apply(color: textStyle.color.withOpacity(0.26)),
+                ),
+              ]),
             ),
         ],
       ),
@@ -116,7 +123,7 @@ class _TranslationRow extends StatelessWidget {
       child: _Row(
         proportions: proportions,
         leading: StreamBuilder<List<L42nStringError>>(
-          stream: string.errors,
+          stream: Stream.empty(), //string.errors,
           builder: (context, snapshot) {
             final errors = snapshot.data;
             if (errors?.isEmpty != false) {
