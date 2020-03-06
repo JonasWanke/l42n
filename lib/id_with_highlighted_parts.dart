@@ -15,7 +15,7 @@ class IdWithHighlightedParts extends StatelessWidget {
     final highlights = [for (var i = 0; i < id.length; i++) false];
 
     for (final part in partsToHighlight) {
-      for (final match in part.allMatches(id)) {
+      for (final match in part.allMatches(id.toLowerCase())) {
         for (var i = match.start; i < match.end; i++) {
           highlights[i] = true;
         }
