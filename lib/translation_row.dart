@@ -32,7 +32,7 @@ class _TranslationRowState extends State<TranslationRow> {
     final project = Provider.of<Project>(context);
 
     return StreamBuilder<List<Locale>>(
-      stream: project.locales,
+      stream: project.localeBloc.all,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(
@@ -80,7 +80,7 @@ class _TranslationRowState extends State<TranslationRow> {
     final project = Provider.of<Project>(context);
 
     return StreamBuilder<List<L42nStringError>>(
-      stream: project.getErrorsForResource(widget.id),
+      stream: project.errorBloc.allForResource(widget.id),
       builder: (context, snapshot) {
         final errors = snapshot.data;
         if (errors?.isEmpty != false) {
