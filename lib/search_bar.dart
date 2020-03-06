@@ -9,13 +9,19 @@ class SearchSuggestion {
 }
 
 /// The whole search bar, including suggestions.
-class SearchBar extends StatelessWidget {
+class SearchBar extends StatefulWidget {
   SearchBar({@required this.onChanged, this.suggestions = const []})
       : assert(onChanged != null, suggestions != null);
 
-  final _controller = TextEditingController();
   final void Function(String) onChanged;
   final List<SearchSuggestion> suggestions;
+
+  @override
+  _SearchBarState createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<SearchBar> {
+  final _controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +36,7 @@ class SearchBar extends StatelessWidget {
               prefixIcon: Icon(Icons.search),
               hintText: 'Search for ids or translations…',
             ),
-            onChanged: onChanged,
+            onChanged: widget.onChanged,
           ),
         ),
         _buildSuggestedSearchFilters(context),
@@ -47,7 +53,7 @@ class SearchBar extends StatelessWidget {
             padding: EdgeInsets.only(left: 16, right: 8),
             scrollDirection: Axis.horizontal,
             children: <Widget>[
-              for (final suggestion in suggestions) ...[
+              for (final suggestion in widget.suggestions) ...[
                 _SearchChip(
                   text: suggestion.displayText,
                   onTap: () {
