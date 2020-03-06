@@ -86,16 +86,14 @@ class Project {
       stringMapStoreFactory.store('resource');
   RecordRef<String, Map<String, dynamic>> _resourceRef(String id) =>
       _resourceStore.record(id);
-  // L42nString addString(String id) {
-  //   if (_strings.containsKey(id)) {
-  //     throw Exception('String with id $id already exists.');
-  //   }
+  Future<void> createResource(String id) async {
+    final ref = _resourceRef(id);
+    if (await ref.exists(_db)) {
+      throw IdAlreadyExistsException(id);
+    }
 
-  //   final string = L42nString(id, {});
-  //   _strings[id] = string;
-  //   backend.onStringAdded(string);
-  //   return string;
-  // }
+    await ref.add(_db, _Resource().toJson());
+  }
 
   Stream<List<String>> get resourceIds => _resourceStore.streamKeys(_db);
 

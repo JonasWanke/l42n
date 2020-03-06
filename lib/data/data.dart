@@ -1,1 +1,1 @@
-export 'project.dart' show Project;
+export 'project.dart' show Project, IdAlreadyExistsException;
