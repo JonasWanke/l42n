@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 
 import 'bloc.dart';
 
@@ -17,27 +18,33 @@ class TranslationGrid extends StatelessWidget {
       for (final _ in bloc.locales) 1,
     ];
 
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          if (index == 0) {
-            return _HeaderRow(
+    return SliverStickyHeaderBuilder(
+      builder: (context, state) => Material(
+        color: Theme.of(context).colorScheme.surface,
+        elevation: state.isPinned ? 4 : 0,
+        child: _HeaderRow(
+          bloc: bloc,
+          proportions: proportions,
+        ),
+      ),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == 0) {
+              return SizedBox(height: 8);
+            }
+            if (index % 2 == 0) {
+              return Divider();
+            }
+
+            return _TranslationRow(
               bloc: bloc,
+              id: ids[index ~/ 2],
               proportions: proportions,
             );
-          }
-          if (index % 2 == 1) {
-            return Divider();
-          }
-
-          final translationIndex = index ~/ 2 - 1;
-          return _TranslationRow(
-            bloc: bloc,
-            id: ids[translationIndex],
-            proportions: proportions,
-          );
-        },
-        childCount: 2 * bloc.ids.length + 1,
+          },
+          childCount: 2 * bloc.ids.length + 1,
+        ),
       ),
     );
   }
@@ -69,7 +76,7 @@ class _HeaderRow extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.subhead;
 
     return SizedBox(
-      height: 52,
+      height: 56,
       child: _Row(
         proportions: proportions,
         cells: [
