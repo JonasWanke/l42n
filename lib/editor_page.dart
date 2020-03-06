@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:l42n/translation_grid.dart';
 
 import 'bloc.dart';
 import 'translation_field.dart';
@@ -38,7 +39,10 @@ class _EditorPageState extends State<EditorPage> {
                 title: Text('L42n'),
               ),
               _buildTopBar(),
-              _buildTable(context, bloc),
+              TranslationGrid(
+                bloc: bloc,
+                filter: _filter,
+              ),
             ],
           ),
         );
@@ -65,48 +69,6 @@ class _EditorPageState extends State<EditorPage> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTable(BuildContext context, Bloc bloc) {
-    final ids = bloc.ids
-        .where((id) => id.toLowerCase().contains(_filter.toLowerCase()))
-        .toList()
-          ..sort();
-
-    return SliverToBoxAdapter(
-      child: DataTable(
-        columns: [
-          DataColumn(label: Text('ID')),
-          for (final locale in bloc.locales)
-            DataColumn(label: Text(locale.toString())),
-        ],
-        rows: [
-          for (final id in ids)
-            DataRow(
-              key: ValueKey(id),
-              /*cells: [
-                DataCell(Text(id)),
-                for (final locale in bloc.locales)
-                  DataColumn(label: Text(locale.toString())),
-              ],
-              rows: [
-                for (final string in bloc.strings)
-                  DataRow(
-                    key: ValueKey(string.id),
-                    cells: [
-                      DataCell(Text(string.id)),
-                      for (final locale in bloc.locales)
-                        DataCell(
-                          TranslationField(string.getTranslation(locale)),
-                        ),
-                    ],
-                  ),
-              ],*/
-              cells: [],
-            ),
         ],
       ),
     );
