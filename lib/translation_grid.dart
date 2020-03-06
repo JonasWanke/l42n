@@ -231,7 +231,7 @@ class _Row extends StatelessWidget {
   const _Row({
     Key key,
     this.leading,
-    this.trailing,
+    this.trailing = const SizedBox(),
     @required this.cells,
     @required this.proportions,
   })  : assert(cells != null),
