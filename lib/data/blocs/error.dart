@@ -7,7 +7,6 @@ import 'package:sembast/sembast.dart';
 import 'package:tuple/tuple.dart';
 
 import '../error.dart';
-import '../utils.dart';
 import 'bloc.dart';
 import 'locale.dart';
 import 'resource.dart';
@@ -39,12 +38,7 @@ class ErrorBloc extends Bloc {
 
   Stream<List<L42nStringError>> allForResource(String id) {
     return _store
-        .query(
-          finder: Finder(
-            filter: Filter.equals('resource', id) &
-                Filter.equals('error._type', MissingTranslationError.type),
-          ),
-        )
+        .query(finder: Finder(filter: Filter.equals('resourceId', id)))
         .onSnapshots(db)
         .map(
             (list) => list.map((e) => _Error.fromJson(e.value).error).toList());
@@ -57,19 +51,19 @@ class ErrorBloc extends Bloc {
       localeBloc.all,
       translationBloc.getAllForResource(id),
       (l, t) => Tuple2<List<Locale>, Map<Locale, String>>(l, t),
-    ).listen((tuple) {
+    ).listen((tuple) async {
       final locales = tuple.item1;
       final translations = tuple.item2;
 
       final errors = locales
-          .where((l) => translations[l] == null)
+          .where((l) => translations[l].isEmpty)
           .map((l) => MissingTranslationError(l))
           .map((e) => _Error(id, e).toJson())
           .toList();
-      db.transaction((t) async {
+      await db.transaction((t) async {
         await _store.delete(
           t,
-          finder: Finder(filter: Filter.equals('resource', id)),
+          finder: Finder(filter: Filter.equals('resourceId', id)),
         );
         await _store.addAll(t, errors);
       });
@@ -90,7 +84,7 @@ class _Error {
   _Error.fromJson(Map<String, dynamic> json)
       : this(
           json['resourceId'],
-          L42nStringError.fromJson(json['value']),
+          L42nStringError.fromJson(json['error']),
         );
   Map<String, dynamic> toJson() => {
         'resourceId': resourceId,
