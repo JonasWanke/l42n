@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:l42n/data/blocs/resource.dart';
 import 'package:l42n/data/blocs/translation.dart';
 import 'package:path/path.dart';
 
@@ -15,6 +16,10 @@ class DirectoryProjectBackend {
     project.eventQueue.listen((event) async {
       if (event is LocaleAddedEvent) {
         await _saveLocale(event.locale);
+      } else if (event is ResourceAddedEvent) {
+        await _saveAllLocales();
+      } else if (event is ResourceDeletedEvent) {
+        await _saveAllLocales();
       } else if (event is TranslationChangedEvent) {
         await _saveLocale(event.locale);
       }
@@ -61,6 +66,13 @@ class DirectoryProjectBackend {
 
   final Directory directory;
   final Project project;
+
+  Future<void> _saveAllLocales() async {
+    final locales = await project.localeBloc.all.first;
+    for (final locale in locales) {
+      await _saveLocale(locale);
+    }
+  }
 
   Future<void> _saveLocale(Locale locale) async {
     final file = File(join(directory.path, 'intl_$locale.arb'));

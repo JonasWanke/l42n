@@ -6,10 +6,15 @@ import 'package:sembast/sembast.dart';
 
 import '../utils.dart';
 import 'bloc.dart';
+import 'resource.dart';
 
 class TranslationBloc extends Bloc {
   TranslationBloc(Database db, BehaviorSubject<Event> eventQueue)
-      : super(db, eventQueue);
+      : super(db, eventQueue) {
+    eventQueue.listen((event) {
+      if (event is ResourceDeletedEvent) {}
+    });
+  }
 
   final StoreRef<int, Map<String, dynamic>> _store =
       intMapStoreFactory.store('translation');
@@ -73,10 +78,10 @@ class TranslationBloc extends Bloc {
     };
   }
 
-  Stream<Map<Locale, String>> getAllForResource(String id) {
+  Stream<Map<Locale, String>> getAllForResource(String resourceId) {
     return _store
         .query(
-          finder: Finder(filter: Filter.equals('resourceId', id)),
+          finder: Finder(filter: Filter.equals('resourceId', resourceId)),
         )
         .onSnapshots(db)
         .map((list) => list
@@ -86,6 +91,16 @@ class TranslationBloc extends Bloc {
               for (final translation in list)
                 translation.locale: translation.value,
             });
+  }
+
+  Future<void> deleteAllForResource(String resourceId) async {
+    final keys = await _store.findKeys(
+      db,
+      finder: Finder(filter: Filter.equals('resourceId', resourceId)),
+    );
+    for (final key in keys) {
+      await _store.record(key).delete(db);
+    }
   }
 }
 

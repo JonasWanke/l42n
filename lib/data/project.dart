@@ -7,7 +7,6 @@ import 'package:l42n/data/blocs/resource.dart';
 import 'package:l42n/data/blocs/translation.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_memory.dart';
 
 import 'blocs/bloc.dart';
@@ -17,14 +16,12 @@ import 'project_backend.dart';
 @immutable
 class Project {
   const Project._(
-    this._db,
     this.eventQueue,
     this.localeBloc,
     this.errorBloc,
     this.resourceBloc,
     this.translationBloc,
-  )   : assert(_db != null),
-        assert(eventQueue != null),
+  )   : assert(eventQueue != null),
         assert(localeBloc != null),
         assert(errorBloc != null),
         assert(resourceBloc != null),
@@ -73,13 +70,12 @@ class Project {
     }
 
     return Project._(
-        db, eventQueue, localeBloc, errorBloc, resourceBloc, translationBloc);
+        eventQueue, localeBloc, errorBloc, resourceBloc, translationBloc);
   }
 
   static Future<Project> forDirectory(Directory directory) =>
       DirectoryProjectBackend.from(directory);
 
-  final Database _db;
   final BehaviorSubject<Event> eventQueue;
 
   final LocaleBloc localeBloc;
@@ -88,10 +84,6 @@ class Project {
   final TranslationBloc translationBloc;
 
   void close() {
-    translationBloc.close();
-    resourceBloc.close();
-    errorBloc.close();
-    localeBloc.close();
     eventQueue.close();
   }
 }
