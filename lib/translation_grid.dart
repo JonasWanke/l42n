@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:l42n/data.dart';
 
 import 'bloc.dart';
 import 'translation_field.dart';
@@ -74,7 +75,7 @@ class _HeaderRow extends StatelessWidget {
       'ID',
       for (final locale in bloc.locales) locale.toString(),
     ];
-    final textStyle = Theme.of(context).textTheme.subhead;
+    final textStyle = Theme.of(context).textTheme.subtitle1;
 
     return SizedBox(
       height: 56,
@@ -114,6 +115,39 @@ class _TranslationRow extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 4),
       child: _Row(
         proportions: proportions,
+        leading: StreamBuilder<List<L42nStringError>>(
+          stream: string.errors,
+          builder: (context, snapshot) {
+            final errors = snapshot.data;
+            if (errors?.isEmpty != false) {
+              return SizedBox();
+            }
+
+            final sorted = errors.toList()
+              ..sort((e1, e2) {
+                return (e1.locale?.toString() ?? '')
+                    .compareTo(e2.locale?.toString() ?? '');
+              });
+            return Tooltip(
+              message: sorted
+                  .map((e) =>
+                      '• ${e.locale != null ? '${e.locale}: ' : ''}${e.message}')
+                  .join('\n'),
+              child: Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: errors.any((e) => e.severity == ErrorSeverity.error)
+                        ? Theme.of(context).errorColor
+                        : Colors.yellow,
+                  ),
+                  width: 12,
+                  height: 12,
+                ),
+              ),
+            );
+          },
+        ),
         cells: [
           Text(string.id),
           for (final locale in bloc.locales)
@@ -127,6 +161,7 @@ class _TranslationRow extends StatelessWidget {
 class _Row extends StatelessWidget {
   const _Row({
     Key key,
+    this.leading,
     @required this.cells,
     @required this.proportions,
   })  : assert(cells != null),
@@ -134,6 +169,7 @@ class _Row extends StatelessWidget {
         assert(cells.length == proportions.length),
         super(key: key);
 
+  final Widget leading;
   final List<Widget> cells;
   final List<int> proportions;
 
@@ -141,6 +177,11 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
+        SizedBox(
+          width: 32,
+          height: 32,
+          child: leading,
+        ),
         for (var i = 0; i < proportions.length; i++)
           Expanded(
             flex: proportions[i],

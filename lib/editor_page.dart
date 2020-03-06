@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:l42n/translation_grid.dart';
 
 import 'bloc.dart';
-import 'translation_field.dart';
 
 class EditorPage extends StatefulWidget {
   const EditorPage(this.directory) : assert(directory != null);

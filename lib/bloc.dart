@@ -9,11 +9,10 @@ import 'data.dart';
 
 @immutable
 class Bloc {
-  const Bloc._(this.directory, this.locales, Map<String, L42nString> strings)
+  const Bloc._(this.directory, this.locales, this._strings)
       : assert(directory != null),
         assert(locales != null),
-        assert(strings != null),
-        _strings = strings;
+        assert(_strings != null);
 
   static Future<Bloc> from(Directory directory) async {
     // final de = Locale('de-DE');
