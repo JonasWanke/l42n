@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l42n/translation_field.dart';
 
 import 'bloc.dart';
 
@@ -26,7 +27,7 @@ class TranslationGrid extends StatelessWidget {
               proportions: proportions,
             );
           }
-          if (index % 2 == 1) {
+          if (index.isOdd) {
             return Divider();
           }
 
@@ -101,7 +102,7 @@ class _TranslationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final string = bloc.strings[id];
+    final string = bloc.getString(id);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
       child: _Row(
@@ -109,7 +110,7 @@ class _TranslationRow extends StatelessWidget {
         cells: [
           Text(string.id),
           for (final locale in bloc.locales)
-            Text(string.translations[locale].value ?? ''),
+            TranslationField(string.getTranslation(locale)),
         ],
       ),
     );
