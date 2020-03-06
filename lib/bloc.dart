@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:l42n/data.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 
@@ -10,11 +9,29 @@ import 'data.dart';
 
 @immutable
 class Bloc {
-  const Bloc._(this.locales, this.strings)
+  const Bloc._(this.locales, Map<String, L42nString> strings)
       : assert(locales != null),
-        assert(strings != null);
+        assert(strings != null),
+        _strings = strings;
 
   static Future<Bloc> from(Directory directory) async {
+    // final de = Locale('de-DE');
+    // final en = Locale('en-US');
+
+    // return Bloc._([
+    //   de,
+    //   en
+    // ], {
+    //   'a': L42nString('a', {
+    //     en: Translation('An a string.'),
+    //     de: Translation('Ein A-String.'),
+    //   }),
+    //   'b': L42nString('b', {
+    //     en: Translation('A b string.'),
+    //     de: Translation('Ein b-String.'),
+    //   }),
+    // });
+
     final entities = await directory.list(followLinks: false).toList();
     final files = entities.whereType<File>();
 
@@ -42,7 +59,7 @@ class Bloc {
         }
 
         final string = strings[id] ??= L42nString(id, {});
-        string.translations[locale] = Translation(entry.value);
+        string.getTranslation(locale).value = entry.value;
         strings[id] = string;
       }
     }
@@ -51,16 +68,21 @@ class Bloc {
   }
 
   final List<Locale> locales;
-  final Map<String, L42nString> strings;
-  Set<String> get ids => strings.keys.toSet();
+  final Map<String, L42nString> _strings;
+  Set<String> get ids => _strings.keys.toSet();
+  List<L42nString> get strings => _strings.values.toList();
 
-  Stream<String> getTranslation(String id, Locale locale) {
-    return strings
-        .putIfAbsent(id, () => L42nString(id, {}))
-        .translations
-        .putIfAbsent(locale, () => Translation())
-        .stream;
+  L42nString createString(String id) {
+    if (_strings.containsKey(id)) {
+      throw Exception('String with id $id already exists.');
+    }
+
+    final string = L42nString(id, {});
+    _strings[id] = string;
+    return string;
   }
 
-  void update(String id, Locale locale, String value) {}
+  L42nString getString(String id) {
+    return _strings[id] ?? (throw Exception('String not found.'));
+  }
 }
