@@ -133,7 +133,7 @@ class Project {
         ref.onSnapshot(_db).map((snapshot) => snapshot.value['value']));
   }
 
-  void setTranslation(String id, Locale locale, String value) async {
+  Future<void> setTranslation(String id, Locale locale, String value) async {
     final ref = await _translationRef(id, locale);
     await ref.update(_db, {
       'id': id,
