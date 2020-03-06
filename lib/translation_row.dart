@@ -6,7 +6,8 @@ import 'id_with_highlighted_parts.dart';
 import 'translation_field.dart';
 import 'translation_grid.dart';
 
-const _animationDuration = Duration(seconds: 1);
+const _animationDuration = Duration(milliseconds: 200);
+const _curve = Curves.easeInOutExpo;
 
 class TranslationRow extends StatefulWidget {
   const TranslationRow({
@@ -27,7 +28,14 @@ class TranslationRow extends StatefulWidget {
 }
 
 class _TranslationRowState extends State<TranslationRow> {
-  bool _isSelected = false;
+  final _focusNode = FocusNode();
+  bool get _isSelected => _focusNode.hasFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() {}));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,35 +55,47 @@ class _TranslationRowState extends State<TranslationRow> {
         final locales = snapshot.data;
         return AnimatedPadding(
           duration: _animationDuration,
+          curve: _curve,
           padding: EdgeInsets.symmetric(vertical: _isSelected ? 16 : 0),
-          child: FocusAttachment(
+          child: Focus(
+            focusNode: _focusNode,
             child: Material(
               animationDuration: _animationDuration,
-              color: Theme.of(context).scaffoldBackgroundColor,
+              color: Color.lerp(
+                Theme.of(context).scaffoldBackgroundColor,
+                Theme.of(context).primaryColor,
+                _isSelected ? 0.05 : 0.0,
+              ),
               elevation: _isSelected ? 4 : 0,
-              child: GridRow(
-                proportions: widget.proportions,
-                leading: _buildIssueDot(),
-                cells: [
-                  IdWithHighlightedParts(
-                    id: widget.id,
-                    partsToHighlight: widget.partsToHighlight.isNotEmpty
-                        ? widget.partsToHighlight
-                        : null,
-                  ),
-                  for (final locale in locales)
-                    TranslationField(widget.id, locale),
-                ],
-                trailing: Center(
-                  child: IconButton(
-                    icon: Icon(Icons.delete_outline),
-                    tooltip: 'Delete resource',
-                    onPressed: () {
-                      // project.
-                      Scaffold.of(context).showSnackBar(SnackBar(
-                        content: Text('Resource ${widget.id} deleted.'),
-                      ));
-                    },
+              child: AnimatedPadding(
+                duration: _animationDuration,
+                curve: _curve,
+                padding: EdgeInsets.symmetric(vertical: _isSelected ? 24 : 4),
+                child: GridRow(
+                  proportions: widget.proportions,
+                  leading: _buildIssueDot(),
+                  cells: [
+                    IdWithHighlightedParts(
+                      id: widget.id,
+                      partsToHighlight: widget.partsToHighlight.isNotEmpty
+                          ? widget.partsToHighlight
+                          : null,
+                    ),
+                    for (final locale in locales)
+                      TranslationField(widget.id, locale),
+                  ],
+                  trailing: Center(
+                    child: IconButton(
+                      icon: Icon(Icons.delete_outline),
+                      tooltip: 'Delete resource.',
+                      onPressed: () {
+                        // project.
+                        Scaffold.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              'Resource ${widget.id} deleted. ${_focusNode.children} $_isSelected'),
+                        ));
+                      },
+                    ),
                   ),
                 ),
               ),
