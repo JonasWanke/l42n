@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:l42n/id_with_highlighted_parts.dart';
 import 'package:provider/provider.dart';
 
 import 'data/data.dart';
@@ -66,6 +67,7 @@ class TranslationGrid extends StatelessWidget {
                     return _TranslationRow(
                       id: ids[index ~/ 2],
                       proportions: proportions,
+                      partsToHighlight: _filterParts,
                     );
                   },
                   childCount: 2 * ids.length + 1,
@@ -143,12 +145,14 @@ class _TranslationRow extends StatelessWidget {
     Key key,
     @required this.id,
     @required this.proportions,
+    this.partsToHighlight = const [],
   })  : assert(id != null),
         assert(proportions != null),
         super(key: key);
 
   final String id;
   final List<int> proportions;
+  final List<String> partsToHighlight;
 
   @override
   Widget build(BuildContext context) {
@@ -211,13 +215,17 @@ class _TranslationRow extends StatelessWidget {
                 onPressed: () {
                   // project.
                   Scaffold.of(context).showSnackBar(SnackBar(
-                    content: Text('Resource deleted.'),
+                    content: Text('Resource $id deleted.'),
                   ));
                 },
               ),
             ),
             cells: [
-              Text(id),
+              IdWithHighlightedParts(
+                id: id,
+                partsToHighlight:
+                    partsToHighlight.isNotEmpty ? partsToHighlight : null,
+              ),
               for (final locale in locales) TranslationField(id, locale),
             ],
           ),

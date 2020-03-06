@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class IdWithHighlightedParts extends StatelessWidget {
-  const IdWithHighlightedParts({this.id, this.partsToHighlight});
+  IdWithHighlightedParts({
+    @required this.id,
+    this.partsToHighlight = const [],
+  })  : assert(id != null),
+        assert(partsToHighlight != null);
 
   final String id;
   final List<String> partsToHighlight;
@@ -11,40 +15,48 @@ class IdWithHighlightedParts extends StatelessWidget {
     final highlights = [for (var i = 0; i < id.length; i++) false];
 
     for (final part in partsToHighlight) {
-      for (final match in id.allMatches(part)) {
+      for (final match in part.allMatches(id)) {
         for (var i = match.start; i < match.end; i++) {
           highlights[i] = true;
         }
       }
     }
 
-    var cursor = 1;
+    var cursor = 0;
     var currentlyHighlighting = highlights[0];
     var parts = <Part>[];
 
-    while (cursor < id.length) {
+    while (++cursor < id.length) {
       if (highlights[cursor] != currentlyHighlighting) {
-        final start =
-            parts.lastWhere((_) => true, orElse: () => null)?.end ?? 0;
-        final end = cursor;
         parts.add(Part(
-          start: start,
-          end: end,
+          start: parts.lastWhere((_) => true, orElse: () => null)?.end ?? 0,
+          end: cursor,
           isHighlighted: currentlyHighlighting,
         ));
         currentlyHighlighting = !currentlyHighlighting;
       }
     }
 
+    parts.add(Part(
+      start: parts.lastWhere((_) => true, orElse: () => null)?.end ?? 0,
+      end: cursor,
+      isHighlighted: highlights.last,
+    ));
+
     return parts;
   }
 
   @override
   Widget build(BuildContext context) {
+    // match();
+    // return Text('${id} ${partsToHighlight} $matches $highlights');
+
     final parts = match();
 
-    final normalStyle = TextStyle();
-    final highlightStyle = TextStyle(backgroundColor: Colors.yellow);
+    final normalStyle = DefaultTextStyle.of(context).style;
+    final highlightStyle = normalStyle.copyWith(
+      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+    );
 
     return RichText(
         text: TextSpan(
