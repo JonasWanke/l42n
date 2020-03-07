@@ -122,12 +122,15 @@ class TopDashboard extends StatelessWidget {
           child: SearchBar(
             onChanged: onFilterChanged,
             suggestions: [
-              SearchSuggestion('has issues', 'hasIssues'),
-              SearchSuggestion('missing translations', 'translationMissing'),
+              SearchSuggestion('has errors', ':errors'),
+              SearchSuggestion('has warning', ':warnings'),
+              SearchSuggestion('missing translations', ':noTranslation'),
               SearchSuggestion('news', 'news'),
               SearchSuggestion('course', 'course'),
               SearchSuggestion('app', 'app'),
               SearchSuggestion('general', 'general'),
+              SearchSuggestion('screen', 'screen'),
+              SearchSuggestion('empty', 'empty'),
             ],
           ),
         ),

@@ -58,6 +58,7 @@ class _SearchBarState extends State<SearchBar> {
                   text: suggestion.displayText,
                   onTap: () {
                     _controller.text += ' ${suggestion.searchText}';
+                    widget.onChanged(_controller.text);
                   },
                 ),
                 SizedBox(width: 8),

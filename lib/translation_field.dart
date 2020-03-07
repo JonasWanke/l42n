@@ -4,12 +4,13 @@ import 'package:provider/provider.dart';
 import 'data/data.dart';
 
 class TranslationField extends StatelessWidget {
-  const TranslationField(this.id, this.locale)
+  const TranslationField(this.id, this.locale, {this.padding})
       : assert(id != null),
         assert(locale != null);
 
   final String id;
   final Locale locale;
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,7 @@ class EditableTranslationField extends StatefulWidget {
     @required this.id,
     @required this.locale,
     @required this.initialText,
+    this.padding,
   })  : assert(id != null),
         assert(locale != null),
         assert(initialText != null);
@@ -49,6 +51,7 @@ class EditableTranslationField extends StatefulWidget {
   final String id;
   final Locale locale;
   final String initialText;
+  final EdgeInsets padding;
 
   @override
   _EditableTranslationFieldState createState() =>
@@ -103,20 +106,26 @@ class _EditableTranslationFieldState extends State<EditableTranslationField> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 200,
-      child: EditableText(
-        focusNode: _focusNode,
-        controller: _controller,
-        autocorrect: true,
-        scrollPadding: EdgeInsets.zero,
-        minLines: 1,
-        maxLines: null,
-        style: Theme.of(context).textTheme.bodyText1,
-        cursorColor: Theme.of(context).primaryColor,
-        backgroundCursorColor: Colors.green,
-        cursorOpacityAnimates: true,
-        cursorRadius: Radius.circular(1),
+    return GestureDetector(
+      onTap: _focusNode.requestFocus,
+      child: Container(
+        width: 200,
+        color: Colors.transparent,
+        padding: widget.padding,
+        alignment: Alignment.center,
+        child: EditableText(
+          focusNode: _focusNode,
+          controller: _controller,
+          autocorrect: true,
+          scrollPadding: EdgeInsets.symmetric(vertical: 100),
+          minLines: 1,
+          maxLines: null,
+          style: Theme.of(context).textTheme.bodyText1,
+          cursorColor: Theme.of(context).primaryColor,
+          backgroundCursorColor: Colors.green,
+          cursorOpacityAnimates: true,
+          cursorRadius: Radius.circular(1),
+        ),
       ),
     );
   }

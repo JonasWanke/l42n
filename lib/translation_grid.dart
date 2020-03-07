@@ -62,7 +62,7 @@ class TranslationGrid extends StatelessWidget {
                       return SizedBox(height: 8);
                     }
                     if (index.isEven) {
-                      return Divider(height: 8);
+                      return Divider(height: 0);
                     }
 
                     return TranslationRow(
@@ -160,24 +160,26 @@ class GridRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      // crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        SizedBox(
-          width: 32,
-          height: 32,
-          child: leading,
-        ),
-        for (var i = 0; i < proportions.length; i++)
-          Expanded(
-            flex: proportions[i],
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: cells[i],
-            ),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: leading,
           ),
-        trailing,
-      ],
+          for (var i = 0; i < proportions.length; i++)
+            Expanded(
+              flex: proportions[i],
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: cells[i],
+              ),
+            ),
+          trailing,
+        ],
+      ),
     );
   }
 }

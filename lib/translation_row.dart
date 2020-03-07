@@ -10,14 +10,13 @@ const _animationDuration = Duration(milliseconds: 200);
 const _curve = Curves.easeInOutExpo;
 
 class TranslationRow extends StatefulWidget {
-  const TranslationRow({
-    Key key,
+  TranslationRow({
     @required this.id,
     @required this.proportions,
     this.partsToHighlight = const [],
   })  : assert(id != null),
         assert(proportions != null),
-        super(key: key);
+        super(key: Key(id));
 
   final String id;
   final List<int> proportions;
@@ -29,7 +28,9 @@ class TranslationRow extends StatefulWidget {
 
 class _TranslationRowState extends State<TranslationRow> {
   final _focusNode = FocusNode();
-  bool get _isSelected => _focusNode.hasFocus;
+  bool get _isFocused => _focusNode.hasFocus;
+
+  Project get _project => Provider.of<Project>(context);
 
   @override
   void initState() {
@@ -39,10 +40,8 @@ class _TranslationRowState extends State<TranslationRow> {
 
   @override
   Widget build(BuildContext context) {
-    final project = Provider.of<Project>(context);
-
     return StreamBuilder<List<Locale>>(
-      stream: project.localeBloc.all,
+      stream: _project.localeBloc.all,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(
@@ -56,7 +55,7 @@ class _TranslationRowState extends State<TranslationRow> {
         return AnimatedPadding(
           duration: _animationDuration,
           curve: _curve,
-          padding: EdgeInsets.symmetric(vertical: _isSelected ? 16 : 0),
+          padding: EdgeInsets.symmetric(vertical: _isFocused ? 16 : 0),
           child: Focus(
             focusNode: _focusNode,
             child: Material(
@@ -64,40 +63,14 @@ class _TranslationRowState extends State<TranslationRow> {
               color: Color.lerp(
                 Theme.of(context).scaffoldBackgroundColor,
                 Theme.of(context).primaryColor,
-                _isSelected ? 0.05 : 0.0,
+                _isFocused ? 0.05 : 0.0,
               ),
-              elevation: _isSelected ? 4 : 0,
-              child: AnimatedPadding(
-                duration: _animationDuration,
-                curve: _curve,
-                padding: EdgeInsets.symmetric(vertical: _isSelected ? 24 : 4),
-                child: GridRow(
-                  proportions: widget.proportions,
-                  leading: _buildIssueDot(),
-                  cells: [
-                    IdWithHighlightedParts(
-                      id: widget.id,
-                      partsToHighlight: widget.partsToHighlight.isNotEmpty
-                          ? widget.partsToHighlight
-                          : null,
-                    ),
-                    for (final locale in locales)
-                      TranslationField(widget.id, locale),
-                  ],
-                  trailing: Center(
-                    child: IconButton(
-                      icon: Icon(Icons.delete_outline),
-                      tooltip: 'Delete resource.',
-                      onPressed: () {
-                        // project.
-                        Scaffold.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              'Resource ${widget.id} deleted. ${_focusNode.children} $_isSelected'),
-                        ));
-                      },
-                    ),
-                  ),
-                ),
+              elevation: _isFocused ? 4 : 0,
+              child: InkWell(
+                onTap: _focusNode.requestFocus,
+                focusColor: Colors.transparent,
+                hoverColor: _isFocused ? Colors.transparent : null,
+                child: _buildRow(locales),
               ),
             ),
           ),
@@ -106,11 +79,41 @@ class _TranslationRowState extends State<TranslationRow> {
     );
   }
 
-  Widget _buildIssueDot() {
-    final project = Provider.of<Project>(context);
+  Widget _buildRow(List<Locale> locales) {
+    return GridRow(
+      proportions: widget.proportions,
+      leading: _buildErrorDot(),
+      cells: [
+        _buildIdColumn(),
+        for (final locale in locales)
+          TranslationField(
+            widget.id,
+            locale,
+            padding: EdgeInsets.symmetric(vertical: _isFocused ? 24 : 4),
+          ),
+      ],
+      trailing: Center(
+        child: IconButton(
+          icon: Icon(Icons.delete_outline),
+          tooltip: 'Delete resource.',
+          onPressed: () {
+            Scaffold.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  'Resource ${widget.id} deleted. ${_focusNode.children} $_isFocused'),
+            ));
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorDot() {
+    return ErrorDot([
+      MissingTranslationError(Locale('de-DE')),
+    ]);
 
     return StreamBuilder<List<L42nStringError>>(
-      stream: project.errorBloc.allForResource(widget.id),
+      stream: _project.errorBloc.allForResource(widget.id),
       builder: (context, snapshot) {
         final errors = snapshot.data;
         if (errors?.isEmpty != false) {
@@ -122,25 +125,109 @@ class _TranslationRowState extends State<TranslationRow> {
             return (e1.locale?.toString() ?? '')
                 .compareTo(e2.locale?.toString() ?? '');
           });
-        return Tooltip(
-          message: sorted
-              .map((e) =>
-                  '• ${e.locale != null ? '${e.locale}: ' : ''}${e.runtimeType}')
-              .join('\n'),
-          child: Center(
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: errors.any((e) => e.severity == ErrorSeverity.error)
-                    ? Theme.of(context).errorColor
-                    : Colors.yellow,
-              ),
-              width: 12,
-              height: 12,
-            ),
-          ),
-        );
+
+        return ErrorDot(sorted);
       },
     );
+  }
+
+  Widget _buildIdColumn() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SizedBox(height: 8),
+        IdWithHighlightedParts(
+          id: widget.id,
+          partsToHighlight: widget.partsToHighlight.isNotEmpty
+              ? widget.partsToHighlight
+              : null,
+        ),
+        if (_isFocused) ...[
+          SizedBox(height: 8),
+          ErrorList([
+            MissingTranslationError(Locale('de-DE')),
+          ]),
+        ],
+        SizedBox(height: 8),
+      ],
+    );
+
+    // return StreamBuilder<List<L42nStringError>>(
+    //   stream: project.errorBloc.allForResource(widget.id),
+    //   builder: (context, snapshot) {
+    //     final errors = snapshot.data;
+    //     if (errors?.isEmpty != false) {
+    //       return SizedBox();
+    //     }
+
+    //     final sorted = errors.toList()
+    //       ..sort((e1, e2) {
+    //         return (e1.locale?.toString() ?? '')
+    //             .compareTo(e2.locale?.toString() ?? '');
+    //       });
+
+    //     return ErrorDot(sorted);
+    //   },
+    // );
+  }
+}
+
+class ErrorDot extends StatelessWidget {
+  ErrorDot(this.errors)
+      : assert(errors != null),
+        assert(errors.isNotEmpty);
+
+  final List<L42nStringError> errors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: errors
+          .map((e) =>
+              '• ${e.locale != null ? '${e.locale}: ' : ''}${e.runtimeType}')
+          .join('\n'),
+      child: Center(
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: errors.any((e) => e.severity == ErrorSeverity.error)
+                ? Theme.of(context).errorColor
+                : Colors.yellow,
+          ),
+          width: 12,
+          height: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class ErrorList extends StatelessWidget {
+  const ErrorList(this.errors);
+
+  final List<L42nStringError> errors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      borderRadius: BorderRadius.circular(8),
+      color: Theme.of(context).errorColor.withOpacity(0.1),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            for (final error in errors) _buildError(error),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError(L42nStringError error) {
+    return Text(
+        '• ${error.locale != null ? '${error.locale}: ' : ''}${error.runtimeType}');
   }
 }
