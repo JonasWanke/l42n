@@ -10,8 +10,6 @@ abstract class Bloc {
 
   final Database db;
   final BehaviorSubject eventQueue;
-
-  void close() {}
 }
 
 @immutable

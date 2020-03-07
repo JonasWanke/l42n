@@ -24,10 +24,22 @@ class ResourceBloc extends Bloc {
     await ref.add(db, _Resource().toJson());
     eventQueue.add(ResourceAddedEvent(id));
   }
+
+  Future<void> delete(String id) async {
+    await _ref(id).delete(db);
+
+    eventQueue.add(ResourceDeletedEvent(id));
+  }
 }
 
 class ResourceAddedEvent extends Event {
   const ResourceAddedEvent(this.id) : assert(id != null);
+
+  final String id;
+}
+
+class ResourceDeletedEvent extends Event {
+  const ResourceDeletedEvent(this.id) : assert(id != null);
 
   final String id;
 }
