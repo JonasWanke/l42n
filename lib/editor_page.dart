@@ -141,7 +141,7 @@ class TopDashboard extends StatelessWidget {
 
   Widget _buildProjectName(BuildContext context) {
     return Text(
-      'schulcloud-flutter',
+      'L42n',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.headline4.copyWith(
             color: Theme.of(context).primaryColor,
