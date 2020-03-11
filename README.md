@@ -1,16 +1,19 @@
-# l41n
+# L42n – for even better L10n!
 
-A new Flutter project.
+L42n is an [ARB][arb]-Editor written in Flutter. To use it, just download the latest [release][releases].
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+## Usage
 
-A few resources to get you started if this is your first Flutter project:
+> **Note:** This project is work-in-progress and some UI-elements are only placeholders for now.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+Go to the [releases-page][releases] and download the binary for your platform.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+When opening the program, you can select a folder containing multiple [.arb-files][arb]. You then see a list of all available resources and can add new or delete existing resources.
+
+Please [open an issue][issue-create] if you find a bug or have an idea for a new feature!
+
+
+[arb]: https://github.com/google/app-resource-bundle/wiki/ApplicationResourceBundleSpecification
+[issue-create]: https://github.com/JonasWanke/l42n/issues/new
+[releases]: https://github.com/JonasWanke/l42n/releases
