@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'data/data.dart';
 
 const _fabSize = 56.0;
 final _borderRadius = BorderRadius.circular(_fabSize * 0.5);
@@ -14,8 +17,8 @@ class _NewResourceFabState extends State<NewResourceFab> {
 
   bool _isOpen = false;
 
-  void _createNewResource(String id) {
-    // TODO: create a new resource
+  void _createNewResource(String id) async {
+    await Provider.of<Project>(context, listen: false).resourceBloc.add(id);
     Scaffold.of(context).showSnackBar(SnackBar(
       content: Text('Added resource $id 👍'),
     ));
