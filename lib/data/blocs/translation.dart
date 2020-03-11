@@ -80,9 +80,7 @@ class TranslationBloc extends Bloc {
 
   Stream<Map<Locale, String>> getAllForResource(String resourceId) {
     return _store
-        .query(
-          finder: Finder(filter: Filter.equals('resourceId', resourceId)),
-        )
+        .query(finder: Finder(filter: Filter.equals('resourceId', resourceId)))
         .onSnapshots(db)
         .map((list) => list
             .map((json) => _Translation.fromJson(json.value))

@@ -108,10 +108,6 @@ class _TranslationRowState extends State<TranslationRow> {
   }
 
   Widget _buildErrorDot() {
-    return ErrorDot([
-      MissingTranslationError(Locale('de-DE')),
-    ]);
-
     return StreamBuilder<List<L42nStringError>>(
       stream: _project.errorBloc.allForResource(widget.id),
       builder: (context, snapshot) {
@@ -145,31 +141,26 @@ class _TranslationRowState extends State<TranslationRow> {
         ),
         if (_isFocused) ...[
           SizedBox(height: 8),
-          ErrorList([
-            MissingTranslationError(Locale('de-DE')),
-          ]),
+          StreamBuilder<List<L42nStringError>>(
+            stream: _project.errorBloc.allForResource(widget.id),
+            builder: (context, snapshot) {
+              final errors = snapshot.data;
+              if (errors?.isEmpty != false) {
+                return SizedBox();
+              }
+
+              final sorted = errors.toList(growable: false)
+                ..sort((e1, e2) {
+                  return (e1.locale?.toString() ?? '')
+                      .compareTo(e2.locale?.toString() ?? '');
+                });
+              return ErrorList(sorted);
+            },
+          ),
         ],
         SizedBox(height: 8),
       ],
     );
-
-    // return StreamBuilder<List<L42nStringError>>(
-    //   stream: project.errorBloc.allForResource(widget.id),
-    //   builder: (context, snapshot) {
-    //     final errors = snapshot.data;
-    //     if (errors?.isEmpty != false) {
-    //       return SizedBox();
-    //     }
-
-    //     final sorted = errors.toList()
-    //       ..sort((e1, e2) {
-    //         return (e1.locale?.toString() ?? '')
-    //             .compareTo(e2.locale?.toString() ?? '');
-    //       });
-
-    //     return ErrorDot(sorted);
-    //   },
-    // );
   }
 }
 

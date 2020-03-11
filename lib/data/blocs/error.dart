@@ -56,7 +56,7 @@ class ErrorBloc extends Bloc {
       final translations = tuple.item2;
 
       final errors = locales
-          .where((l) => translations[l].isEmpty)
+          .where((l) => translations[l] == null || translations[l].isEmpty)
           .map((l) => MissingTranslationError(l))
           .map((e) => _Error(id, e).toJson())
           .toList();
