@@ -50,7 +50,12 @@ class ChooseDirectoryPage extends StatelessWidget {
                     builder: (_) => EditorPage(Directory(_pathController.text)),
                   ));
                 },
-                child: Text('Open'),
+                child: Text(
+                  'Open',
+                  style: TextStyle(
+                    color: Theme.of(context).primaryTextTheme.button.color,
+                  ),
+                ),
               ),
             ],
           ),
