@@ -11,8 +11,10 @@ import 'resource.dart';
 class TranslationBloc extends Bloc {
   TranslationBloc(Database db, BehaviorSubject<Event> eventQueue)
       : super(db, eventQueue) {
-    eventQueue.listen((event) {
-      if (event is ResourceDeletedEvent) {}
+    eventQueue.listen((event) async {
+      if (event is ResourceDeletedEvent) {
+        await deleteAllForResource(event.id);
+      }
     });
   }
 

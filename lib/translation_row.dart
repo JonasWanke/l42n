@@ -30,7 +30,7 @@ class _TranslationRowState extends State<TranslationRow> {
   final _focusNode = FocusNode();
   bool get _isFocused => _focusNode.hasFocus;
 
-  Project get _project => Provider.of<Project>(context);
+  Project get _project => Provider.of<Project>(context, listen: false);
 
   @override
   void initState() {
@@ -96,10 +96,10 @@ class _TranslationRowState extends State<TranslationRow> {
         child: IconButton(
           icon: Icon(Icons.delete_outline),
           tooltip: 'Delete resource.',
-          onPressed: () {
+          onPressed: () async {
+            await _project.resourceBloc.delete(widget.id);
             Scaffold.of(context).showSnackBar(SnackBar(
-              content: Text(
-                  'Resource ${widget.id} deleted. ${_focusNode.children} $_isFocused'),
+              content: Text('Resource ${widget.id} deleted.'),
             ));
           },
         ),
