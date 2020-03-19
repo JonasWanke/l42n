@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:l42n/new_resource_fab.dart';
@@ -143,9 +144,9 @@ class TopDashboard extends StatelessWidget {
     return Text(
       'L42n',
       textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.headline4.copyWith(
-            color: Theme.of(context).primaryColor,
-          ),
+      style: context.textTheme.headline4.copyWith(
+        color: context.theme.primaryColor,
+      ),
     );
   }
 }

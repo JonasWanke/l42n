@@ -1,7 +1,8 @@
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 
 class IdWithHighlightedParts extends StatelessWidget {
-  IdWithHighlightedParts({
+  const IdWithHighlightedParts({
     @required this.id,
     this.partsToHighlight = const [],
   })  : assert(id != null),
@@ -55,7 +56,7 @@ class IdWithHighlightedParts extends StatelessWidget {
 
     final normalStyle = DefaultTextStyle.of(context).style;
     final highlightStyle = normalStyle.copyWith(
-      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+      backgroundColor: context.theme.primaryColor.withOpacity(0.3),
     );
 
     return RichText(

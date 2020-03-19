@@ -1,10 +1,9 @@
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:l42n/id_with_highlighted_parts.dart';
 import 'package:provider/provider.dart';
 
 import 'data/data.dart';
-import 'translation_field.dart';
 import 'translation_row.dart';
 
 class TranslationGrid extends StatelessWidget {
@@ -37,7 +36,7 @@ class TranslationGrid extends StatelessWidget {
         ];
         return SliverStickyHeaderBuilder(
           builder: (context, state) => Material(
-            color: Theme.of(context).colorScheme.surface,
+            color: context.theme.colorScheme.surface,
             elevation: state.isPinned ? 4 : 0,
             child: _HeaderRow(proportions: proportions),
           ),
@@ -99,7 +98,7 @@ class _HeaderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final project = Provider.of<Project>(context);
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = context.textTheme.subtitle1;
 
     return StreamBuilder<List<Locale>>(
       stream: project.localeBloc.all,

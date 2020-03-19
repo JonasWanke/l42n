@@ -1,3 +1,4 @@
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 
 @immutable
@@ -10,7 +11,7 @@ class SearchSuggestion {
 
 /// The whole search bar, including suggestions.
 class SearchBar extends StatefulWidget {
-  SearchBar({@required this.onChanged, this.suggestions = const []})
+  const SearchBar({@required this.onChanged, this.suggestions = const []})
       : assert(onChanged != null, suggestions != null);
 
   final void Function(String) onChanged;
@@ -113,7 +114,7 @@ class _SearchChip extends StatelessWidget {
       label: Text(text),
       elevation: 2,
       pressElevation: 6,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: context.theme.scaffoldBackgroundColor,
       onPressed: onTap,
     );
   }

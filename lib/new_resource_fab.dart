@@ -1,3 +1,4 @@
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -78,7 +79,7 @@ class _NewResourceFabState extends State<NewResourceFab> {
       child: InkWell(
         borderRadius: _borderRadius,
         onTap: _open,
-        child: Icon(Icons.add, color: Theme.of(context).primaryColor),
+        child: Icon(Icons.add, color: context.theme.primaryColor),
       ),
     );
   }
@@ -100,7 +101,7 @@ class _NewResourceFabState extends State<NewResourceFab> {
       ),
       // child: InkWell(
       //   onTap: () => setState(() => _isOpen = false),
-      //   child: Icon(Icons.add, color: Theme.of(context).primaryColor),
+      //   child: Icon(Icons.add, color: context.theme.primaryColor),
       // ),
     );
   }

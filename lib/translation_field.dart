@@ -1,3 +1,4 @@
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -120,8 +121,8 @@ class _EditableTranslationFieldState extends State<EditableTranslationField> {
           scrollPadding: EdgeInsets.symmetric(vertical: 100),
           minLines: 1,
           maxLines: null,
-          style: Theme.of(context).textTheme.bodyText1,
-          cursorColor: Theme.of(context).primaryColor,
+          style: context.textTheme.bodyText1,
+          cursorColor: context.theme.primaryColor,
           backgroundCursorColor: Colors.green,
           cursorOpacityAnimates: true,
           cursorRadius: Radius.circular(1),

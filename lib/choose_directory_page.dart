@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 
 import 'editor_page.dart';
@@ -39,7 +40,7 @@ class ChooseDirectoryPage extends StatelessWidget {
               ),
               SizedBox(width: 16),
               RaisedButton(
-                color: Theme.of(context).primaryColor,
+                color: context.theme.primaryColor,
                 onPressed: () {
                   final isValid = _formKey.currentState.validate();
                   if (!isValid) {
@@ -53,7 +54,7 @@ class ChooseDirectoryPage extends StatelessWidget {
                 child: Text(
                   'Open',
                   style: TextStyle(
-                    color: Theme.of(context).primaryTextTheme.button.color,
+                    color: context.theme.primaryTextTheme.button.color,
                   ),
                 ),
               ),

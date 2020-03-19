@@ -1,3 +1,4 @@
+import 'package:black_hole_flutter/black_hole_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -61,8 +62,8 @@ class _TranslationRowState extends State<TranslationRow> {
             child: Material(
               animationDuration: _animationDuration,
               color: Color.lerp(
-                Theme.of(context).scaffoldBackgroundColor,
-                Theme.of(context).primaryColor,
+                context.theme.scaffoldBackgroundColor,
+                context.theme.primaryColor,
                 _isFocused ? 0.05 : 0.0,
               ),
               elevation: _isFocused ? 4 : 0,
@@ -183,7 +184,7 @@ class ErrorDot extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: errors.any((e) => e.severity == ErrorSeverity.error)
-                ? Theme.of(context).errorColor
+                ? context.theme.errorColor
                 : Colors.yellow,
           ),
           width: 12,
@@ -203,7 +204,7 @@ class ErrorList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       borderRadius: BorderRadius.circular(8),
-      color: Theme.of(context).errorColor.withOpacity(0.1),
+      color: context.theme.errorColor.withOpacity(0.1),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(8),

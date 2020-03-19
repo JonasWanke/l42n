@@ -12,6 +12,7 @@ dependencies:
 
   analyzer: ^0.39.4
   animations: ^1.0.0+5
+  black_hole_flutter: ^0.1.0
   flutter_sticky_header: ^0.4.2
   get_it: ^4.0.0
   meta: ^1.1.8
