@@ -69,6 +69,7 @@ class TranslationBloc extends Bloc {
         .query(
           finder: Finder(
             filter: Filter.equals('locale', locale.toLanguageTag()),
+            sortOrders: [SortOrder('resourceId')],
           ),
         )
         .getSnapshots(db);

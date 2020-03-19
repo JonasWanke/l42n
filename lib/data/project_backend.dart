@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:l42n/data/blocs/resource.dart';
-import 'package:l42n/data/blocs/translation.dart';
 import 'package:path/path.dart';
 
 import 'blocs/locale.dart';
+import 'blocs/resource.dart';
+import 'blocs/translation.dart';
 import 'project.dart';
 
 class DirectoryProjectBackend {
