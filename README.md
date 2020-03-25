@@ -2,6 +2,7 @@
 
 L42n is an [ARB][arb]-Editor written in Flutter. To use it, just download the latest [release][releases].
 
+![Screenshot](https://github.com/JonasWanke/l42n/raw/master/doc/screenshot.png?raw=true)
 
 ## Usage
 
