@@ -18,8 +18,3 @@ extension FancyStoreRef on StoreRef {
         .map((list) => list.map((snapshot) => snapshot.key).cast<K>().toList());
   }
 }
-
-extension FancyFilter on Filter {
-  Filter operator &(Filter other) => Filter.and([this, other]);
-  Filter operator |(Filter other) => Filter.or([this, other]);
-}
