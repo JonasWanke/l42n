@@ -10,18 +10,6 @@ import 'package:provider/provider.dart';
 import 'data/data.dart';
 import 'search_bar.dart';
 
-const addNewResourceKey = Key('add_new_resource');
-const addNewResourceIntent = Intent(addNewResourceKey);
-
-class AddNewResource extends Action {
-  AddNewResource() : super(addNewResourceKey);
-
-  @override
-  void invoke(FocusNode node, Intent intent) {
-    print('Adding a new resource'); // TODO: add a new resource
-  }
-}
-
 class EditorPage extends StatefulWidget {
   const EditorPage(this.directory) : assert(directory != null);
 
@@ -32,18 +20,6 @@ class EditorPage extends StatefulWidget {
 }
 
 class _EditorPageState extends State<EditorPage> {
-  final shortcuts = {
-    LogicalKeySet(
-      LogicalKeyboardKey.control,
-      LogicalKeyboardKey.keyN,
-    ): addNewResourceIntent,
-    LogicalKeySet(LogicalKeyboardKey.brightnessDown): addNewResourceIntent,
-  };
-
-  final Map<LocalKey, Action Function()> actions = {
-    addNewResourceKey: () => AddNewResource(),
-  };
-
   String _filter = '';
 
   @override
@@ -61,13 +37,7 @@ class _EditorPageState extends State<EditorPage> {
 
         return Provider<Project>(
           create: (_) => snapshot.data,
-          child: Actions(
-            actions: actions,
-            child: Shortcuts(
-              shortcuts: shortcuts,
-              child: Builder(builder: _buildContent),
-            ),
-          ),
+          child: Builder(builder: _buildContent),
         );
       },
     );
