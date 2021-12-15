@@ -13,7 +13,10 @@ class ResourceBloc extends Bloc {
       stringMapStoreFactory.store('resource');
   RecordRef<String, Map<String, dynamic>> _ref(String id) => _store.record(id);
 
-  Stream<List<String>> get all => _store.streamKeys(db);
+  Stream<List<String>> get all => _store.streamKeys(
+        db,
+        finder: Finder(sortOrders: [SortOrder(Field.key)]),
+      );
 
   Future<void> add(String id) async {
     final ref = _ref(id);

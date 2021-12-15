@@ -12,8 +12,8 @@ extension FancyString on String {
 }
 
 extension FancyStoreRef on StoreRef {
-  Stream<List<K>> streamKeys<K>(Database db) {
-    return query()
+  Stream<List<K>> streamKeys<K>(Database db, {Finder finder}) {
+    return query(finder: finder)
         .onSnapshots(db)
         .map((list) => list.map((snapshot) => snapshot.key).cast<K>().toList());
   }
